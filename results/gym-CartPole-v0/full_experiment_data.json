@@ -1,0 +1,27 @@
+{
+    "MDP": {
+        "name": "<class 'simple_rl.tasks.gym.GymMDPClass.GymMDP'>",
+        "params": {
+            "env_name": "CartPole-v0"
+        }
+    },
+    "AGENTS": {
+        "<class 'simple_rl.agents.QLearningAgentClass.QLearningAgent'>": {
+            "params": {
+                "alpha": 0.2,
+                "gamma": 0.99,
+                "epsilon": 0.4,
+                "anneal": false,
+                "explore": "uniform"
+            },
+            "index": 0
+        }
+    },
+    "MISC": {
+        "instances": 3,
+        "episodes": 1,
+        "steps": 50,
+        "track_disc_reward": false
+    },
+    "FUNC": "run_agents_on_mdp"
+}
