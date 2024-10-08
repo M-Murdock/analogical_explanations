@@ -42,12 +42,12 @@ def solve_mdp(agent, mdp, episodes, steps, reset_at_terminal=False, resample_at_
         return mdp, agent
         
 
-def run_mdp(agent, mdp, steps, reset_at_terminal=False, resample_at_terminal=False):
+def run_mdp(agent, mdp):
     trajectory = [] 
     state = mdp.get_init_state()
     reward = 0
     
-    for step in range(1, steps + 1):
+    while not state.is_terminal():
         # mdp.visualize_learning(agent)
         # mdp.visualize_agent(agent)
         # Compute the agent's policy.
@@ -62,15 +62,15 @@ def run_mdp(agent, mdp, steps, reset_at_terminal=False, resample_at_terminal=Fal
         
         trajectory.append((state, action))
         
-        if next_state.is_terminal():
-            break
+        # if next_state.is_terminal():
+        #     break
         
-        if reset_at_terminal:
-            # Reset the MDP.
-            next_state = mdp.get_init_state()
-            mdp.reset()
-        elif resample_at_terminal and step < steps:
-            mdp.reset()
+        # if reset_at_terminal:
+        #     # Reset the MDP.
+        #     next_state = mdp.get_init_state()
+        #     mdp.reset()
+        # elif resample_at_terminal and step < steps:
+        #     mdp.reset()
 
         # Update pointer.
         state = next_state
