@@ -48,6 +48,8 @@ def run_mdp(agent, mdp, steps, reset_at_terminal=False, resample_at_terminal=Fal
     reward = 0
     
     for step in range(1, steps + 1):
+        # mdp.visualize_learning(agent)
+        # mdp.visualize_agent(agent)
         # Compute the agent's policy.
         action = agent.act(state, reward, learning=False)
         
@@ -72,6 +74,7 @@ def run_mdp(agent, mdp, steps, reset_at_terminal=False, resample_at_terminal=Fal
 
         # Update pointer.
         state = next_state
+
     print(trajectory)
     
     # Reset the MDP, tell the agent the episode is over.

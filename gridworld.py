@@ -15,6 +15,7 @@ def main():
 
     mdp, ql_agent = solve_mdp(ql_agent, mdp, episodes=50, steps=1000)
     run_mdp(ql_agent, mdp, steps=1000)
+    mdp.visualize_agent(ql_agent)
     
 if __name__ == "__main__":
     main()
