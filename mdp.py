@@ -38,6 +38,8 @@ def solve_mdp(agent, mdp, episodes, steps, reset_at_terminal=False, resample_at_
         # Reset the MDP, tell the agent the episode is over.
         mdp.reset()
         agent.end_of_episode()
+
+        return mdp, agent
         
 
 def run_mdp(agent, mdp, steps, reset_at_terminal=False, resample_at_terminal=False):
