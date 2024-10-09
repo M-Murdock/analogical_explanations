@@ -1,10 +1,10 @@
-import gymnasium as gym
-import numpy as np
-import random
+# import gymnasium as gym
+# import numpy as np
+# import random
 from AE import AE
 import torch
-import torchvision
-import tensorflow as tf
+# import torchvision
+# import tensorflow as tf
 import torch.utils.data as data_utils
 
 def main():
@@ -14,7 +14,7 @@ def main():
     TRAJ_LEN = 15
 
     model = AE(input_dim=NUM_TRAJECTORIES)
-
+    print(model.encoder[0].weight)
 
     rand_list = torch.rand((TRAJ_LEN,NUM_TRAJECTORIES,), dtype=torch.float)
     labels_list = torch.rand((TRAJ_LEN,), dtype=torch.float)
