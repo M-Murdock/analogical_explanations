@@ -1,6 +1,8 @@
 from simple_rl.tasks.grid_world import GridWorldMDPClass
 from simple_rl.agents import QLearningAgent
 from simple_rl.run_experiments import run_single_agent_on_mdp
+import matplotlib.pyplot as plt
+import numpy as np
 
 
 # -------------------------
@@ -16,15 +18,26 @@ def _get_sa_sequences(trajectories):
 
         
         temp_state = []
-        # get the two values for the current state
+        # get the string for the current state
         for s in s_sequence:
             temp_state.append("" + str(s[0]) + "-" + str(s[1]))
             
-        # Convert up/down/left/right to numbers
         a_sequence = [t[1] for t in traj]   
         actions.append(a_sequence)
         states.append(temp_state)   
 
+    
+    return states, actions
+# -------------------------
+# -------------------------
+
+def _get_sa_sequence(trajectory):
+    actions = []
+    states = []
+    
+    # get the list of states for the current trajectory
+    states = [(t[0][0],t[0][1]) for t in trajectory]    
+    actions = [t[1] for t in trajectory]    
     
     return states, actions
 # -------------------------
@@ -117,3 +130,26 @@ def _run_mdp(agent, mdp):
     mdp.reset()
     agent.end_of_episode()
     return trajectory, rewards
+
+def visualize_trajectory(trajectories, labels=["A", "B", "C", "D"]):
+    fig, ax = plt.subplots()
+    
+    all_of_x = []
+    all_of_y = []
+    
+    for trajectory in trajectories: 
+        states, _ = _get_sa_sequence(trajectory)
+    
+        x = [s[0] for s in states]
+        y = [s[1] for s in states]
+        all_of_x.append(x)
+        all_of_y.append(y)
+    
+    for i in range(0, len(trajectories)):
+        ax.plot(all_of_x[i], all_of_y[i], label=labels[i])
+    
+
+    ax.set(xlabel='X', ylabel='Y',
+        title='Trajectory graph')
+    ax.grid()
+    plt.show()

@@ -3,14 +3,14 @@
 # Python imports.
 from __future__ import print_function
 from ngrams import create_ngrams, get_vector, find_most_similar_vector
-from trajectory import save_traj_to_file, create_optimal_trajectories
+from trajectory import save_traj_to_file, create_optimal_trajectories, visualize_trajectory
 
 
 def main():
     # -------------------------
     # -----------------------
     # STEP 1: Create Trajectories (via optimal policies)
-    optimal_trajectories, rewards, ql_agents, mdps = create_optimal_trajectories(map_name="easygrid.txt", num_agents=10, episodes=1000, steps=200, slip_prob=0.1)
+    optimal_trajectories, rewards, ql_agents, mdps = create_optimal_trajectories(map_name="maps/easygrid.txt", num_agents=10, episodes=1000, steps=200, slip_prob=0.1)
     # -------------------------
     # -----------------------
     
@@ -21,9 +21,9 @@ def main():
     N_GRAM_TYPE = "state-reward"
     
     # save the trajectories to a file so that we can turn them into embeddings later
-    save_traj_to_file(optimal_trajectories, rewards, file_name=(N_GRAM_TYPE + ".txt"), ngram_type=N_GRAM_TYPE) # NOTE: this can be commented out
+    save_traj_to_file(optimal_trajectories, rewards, file_name=("saved_trajectories/" + N_GRAM_TYPE + ".txt"), ngram_type=N_GRAM_TYPE) # NOTE: this can be commented out
     # create embeddings
-    model, trajectory_objs = create_ngrams((N_GRAM_TYPE + ".txt"))
+    model, trajectory_objs = create_ngrams(("saved_trajectories/" + N_GRAM_TYPE + ".txt"))
     # -------------------------
     # -----------------------
     
@@ -62,14 +62,22 @@ def main():
             break
     
 
-    print(unfiltered_similarity_ranking)
-    print(D_TRAJECTORY_INDEX)
-    
-    # visualize the two "similar" trajectories
-    mdps[A_TRAJECTORY_INDEX].visualize_agent(ql_agents[A_TRAJECTORY_INDEX])
-    mdps[B_TRAJECTORY_INDEX].visualize_agent(ql_agents[B_TRAJECTORY_INDEX])
+    # print(unfiltered_similarity_ranking)
+    # print(D_TRAJECTORY_INDEX)
+    # plot the trajectory on a graph
+    visualize_trajectory([optimal_trajectories[A_TRAJECTORY_INDEX], optimal_trajectories[B_TRAJECTORY_INDEX], optimal_trajectories[C_TRAJECTORY_INDEX], optimal_trajectories[D_TRAJECTORY_INDEX]])
     # -------------------------
     # -----------------------
+    # visualize the two "similar" trajectories
+    # mdps[A_TRAJECTORY_INDEX].visualize_agent(ql_agents[A_TRAJECTORY_INDEX])
+    # mdps[B_TRAJECTORY_INDEX].visualize_agent(ql_agents[B_TRAJECTORY_INDEX])
+    
+    
+    # mdps[C_TRAJECTORY_INDEX].visualize_agent(ql_agents[C_TRAJECTORY_INDEX])
+    # mdps[D_TRAJECTORY_INDEX].visualize_agent(ql_agents[D_TRAJECTORY_INDEX])
+    # -------------------------
+    # -----------------------
+    
 
 
 

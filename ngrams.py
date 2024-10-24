@@ -45,7 +45,7 @@ def create_ngrams(file_name):
             if not j == '.': 
                 temp.append(j.lower())
 
-        sentence_words.append(temp)
+        sentence_words.append(temp) 
 
 
     # store all the sentences as TaggedDocument objects
