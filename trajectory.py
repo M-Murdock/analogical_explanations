@@ -49,10 +49,10 @@ def _get_sa_sequences(trajectories):
            
         actions.append(a_sequence)
         states.append(temp_state)   
-        print("actions")
-        print(actions)
-        print("states")
-        print(states)
+        # print("actions")
+        # print(actions)
+        # print("states")
+        # print(states)
 
     
     return states, actions

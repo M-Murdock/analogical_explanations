@@ -11,6 +11,9 @@ from simple_rl.agents import QLearningAgent
 from simple_rl.run_experiments import run_single_agent_on_mdp
 from trajectory import create_embeddings
 from ngrams import create_ngrams
+from trajectory import _get_sa_sequences
+
+
 # , find_closest_reward, initialize_common_ground, select_analogical_example
 
 def main():
@@ -18,9 +21,6 @@ def main():
     # -----------------------
     # STEP 1: Create Trajectories (via optimal policies)
     optimal_trajectories, rewards = create_optimal_trajectories(map_name="easygrid.txt", num_agents=3, episodes=1000, steps=200, slip_prob=0.1)
-    # print(optimal_trajectories)
-    # print(rewards)
-    print("DONE")
     # -------------------------
     # -----------------------
     
@@ -29,9 +29,9 @@ def main():
     # STEP 2: Create embeddings of the trajectories (using whatever technique)
     # -------------------------
     # -----------------------
-    embedded_trajectories = create_ngrams(optimal_trajectories, rewards, "state-action")
-    # embedded_trajectories = create_embeddings(optimal_trajectories, rewards, "state-action")
-    print(embedded_trajectories)
+    save_traj_to_file(optimal_trajectories, file_name="state-action.txt", ngram_type="state-action")
+    embedded_trajectories = create_ngrams("state-action.txt")
+    # print(embedded_trajectories)
     # print(embedded_trajectories)
 
     # -------------------------
@@ -111,6 +111,24 @@ def _run_mdp(agent, mdp):
     mdp.reset()
     agent.end_of_episode()
     return trajectory, rewards
+
+
+# get the lists of states and actions
+def save_traj_to_file(trajectories, file_name="state-action.txt", ngram_type="state-action"):
+    contents = None
+    if ngram_type == "state-action":
+        s_seq, a_seq = _get_sa_sequences(trajectories)
+        
+        contents = ""
+        # save state-action pairs to the file
+        for traj_num in range(0, len(s_seq)): # go through each trajectory
+            for i in range(0, len(s_seq[traj_num])):
+                contents += " " + s_seq[traj_num][i] + "" + a_seq[traj_num][i]
+            contents += "."
+            
+    f = open(file_name, "w")
+    f.write(contents)
+    f.close()
 
 
 if __name__ == "__main__":

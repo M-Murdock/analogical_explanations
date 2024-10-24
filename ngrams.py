@@ -1,7 +1,7 @@
 # Python program to generate word vectors using Word2Vec
 # https://tedboy.github.io/nlps/generated/generated/gensim.models.Word2Vec.html
 # https://radimrehurek.com/gensim/models/keyedvectors.html 
-
+# https://www.analyticsvidhya.com/blog/2020/08/top-4-sentence-embedding-techniques-using-python/
 
 # importing all necessary modules
 from gensim.models import Word2Vec
@@ -10,6 +10,13 @@ from nltk.tokenize import sent_tokenize, word_tokenize
 from trajectory import _get_sa_sequences
 import warnings
 import nltk
+import numpy as np
+
+from gensim.models.doc2vec import Doc2Vec, TaggedDocument
+from nltk.tokenize import word_tokenize
+from gensim.utils import simple_preprocess
+
+
 # import ssl
 
 # try:
@@ -20,8 +27,72 @@ import nltk
 #     ssl._create_default_https_context = _create_unverified_https_context
 
 # nltk.download()
+def cosine(u, v):
+    return np.dot(u, v) / (np.linalg.norm(u) * np.linalg.norm(v))
 
+#Tokenizing with simple preprocess gensim's simple preprocess
+# def sent_to_words(sentences):
+#     for sentence in sentences:
+#         yield(simple_preprocess(str(sentence), deacc=True)) # returns lowercase tokens, ignoring tokens that are too short or too long
 
+def create_ngrams(file_name):
+    #open and read the file of trajectories:
+    sample = open(file_name)
+    sentences = sample.read()
+    
+    # tokenized_sent = []
+    # for s in word_tokenize(sentences):
+    #     # print(s)
+    #     tokenized_sent.append(word_tokenize(s.lower()))
+        
+    # sentence_words = list(enumerate(word_tokenize(sentences)))
+    sentence_words = []
+
+    # iterate through each sentence in the file
+    for i in sent_tokenize(sentences):
+        temp = []
+
+        # tokenize the sentence into words
+        for j in word_tokenize(i):
+            if not j == '.': 
+                temp.append(j.lower())
+
+        sentence_words.append(temp)
+    # print(sentence_words)
+    # documents = [TaggedDocument(doc, [i]) for i, doc in enumerate(word_tokenize(sentence_words))]
+    documents = [TaggedDocument(doc, [i]) for i, doc in enumerate(sentence_words)]
+    # print("DOCUMENTS")
+    # print(documents)
+    # print(documents[0])
+    # model = Doc2Vec(documents, vector_size=100, window=8, min_count=5, workers=2, dm = 1, epochs=20)
+    model = Doc2Vec(vector_size=100, min_count=3, epochs=20)
+    model.build_vocab(documents)
+    model.train(documents, total_examples=model.corpus_count, epochs=model.epochs)
+    # print(f"Word '11-5right' appeared {model.wv.get_vecattr('11-5right', 'count')} times in the training corpus.")
+    
+    inferred_vector = model.infer_vector(documents[2].words)
+    print("VECTOR")
+    print(inferred_vector)
+    # sims = model.dv.most_similar([inferred_vector], topn=len(model.dv))
+    # print(inferred_vector)
+    # similar_doc = model.doc2vec.most_similar('0')
+    print("DOCS 0")
+    print(documents[0][0])
+    similar_doc = model.docvecs.most_similar(positive=[inferred_vector], negative=[])
+    print("SIMILAR")
+    print(similar_doc[0])
+    # tagged_data = [TaggedDocument(d, [i]) for i, d in enumerate(tokenized_sent)]
+    # model = Doc2Vec(tagged_data, vector_size = 20, window = 2, min_count = 1, epochs = 100)
+    # print(tagged_data)
+    
+    # print(model.wv.vocab)
+    # query = '11-5right'
+    # query_vec = model.encode([query])[0]
+    # for sent in sentences:
+    #     sim = cosine(query_vec, model.encode([sent])[0])
+    #     print("Sentence = ", sent, "; similarity = ", sim)
+    
+    return None
 # warnings.filterwarnings(action='ignore')
 # -------------------------
 # -------------------------
@@ -53,25 +124,10 @@ import nltk
 # can be very large, a number of training optimizations are often em-
 # ployed, such as hierarchical softmax and negative sampling (Mikolov
 # et al., 2013).
-def create_ngrams(trajectories, reward, ngram_type):
-    # get the lists of states and actions
-    s_seq, a_seq = _get_sa_sequences(trajectories)
-    
-    sa_str = ""
-    # save state-action pairs to the file
-    for traj_num in range(0, len(s_seq)): # go through each trajectory
-        for i in range(0, len(s_seq[traj_num])):
-            sa_str += " " + s_seq[traj_num][i] + "" + a_seq[traj_num][i]
-        sa_str += "."
-            
-    print("sastr")
-    print(sa_str)
-    f = open("state-action.txt", "w")
-    f.write(sa_str)
-    f.close()
+def old_create_ngrams(file_name):
 
-    #open and read the file after the appending:
-    sample = open("state-action.txt")
+    #open and read the file of trajectories:
+    sample = open(file_name)
     f = sample.read()
     
 
@@ -88,34 +144,31 @@ def create_ngrams(trajectories, reward, ngram_type):
         data.append(temp)
 
     # Create CBOW model
-    model1 = gensim.models.Word2Vec(data, min_count=1, vector_size=100, window=5)
-    # Print results
-    print("Cosine similarity between '7-6right' " + "and '10-5right' - CBOW : ", model1.wv.similarity('7-6right', '10-5right'))
-
+    cbow_model = gensim.models.Word2Vec(data, min_count=1, vector_size=100, window=5)
     # Create Skip Gram model
-    model2 = gensim.models.Word2Vec(data, min_count=1, vector_size=100, window=5, sg=1)
-    print("Cosine similarity between '7-6right' " + "and '10-5right' - Skip Gram : ", model2.wv.similarity('7-6right', '10-5right'))
-    print("most similar to 7-6right: ", model2.wv.most_similar(positive=["7-6right"]))
+    skip_gram_model = gensim.models.Word2Vec(data, min_count=1, vector_size=100, window=5, sg=1)
     
-    # vec1 = model2.wv.get_vector('7-6right')
-    # vec2 = model2.wv.get_vector('10-5right')
+    # print("Cosine similarity between '7-6right' " + "and '10-5right' - Skip Gram : ", model2.wv.similarity('7-6right', '10-5right'))
+    # print("most similar to 7-6right: ", model2.wv.most_similar(positive=['7-6right']))
+
+    # combine state-action vectors for each trajectory 
     sent_sum = []
     for sent in data:
-        # sent_sum.append([model2.wv.get_vector(w) for w in sent])
-        # print("W: ", sent[1])
         temp_sent = []
         for word in sent:
-            print("W: ", word)
-            temp_sent.append(model2.wv.get_vector('10-5right'))
+            temp_sent.append(skip_gram_model.wv.get_vector(word))
         sent_sum.append(temp_sent)
-        
-    # print("SIMILAR")
-    # print(sent_sum)
-    difference_vector = model2.wv.distance('7-6right', '10-5right')
-    # print(difference_vector)
+    
+    # compute difference between two trajectories
+    print("DIFF")
+    # print(np.setdiff1d(sent_sum[0], sent_sum[1]))
+    # print(type(sent_sum))
+    # difference_vector = model2.wv.distance('7-6right', '10-5right')
+    
     # print(model2.wv.distance('7-6right', '10-5right'))
     # Finds two vectors which are similar to each other by some vector difference
-    # print(model2.wv.similar_by_vector([1,2]))
+    print(sent_sum[0])
+    print(skip_gram_model.wv.similar_by_vector(sent_sum[0], sent_sum[1]))
     # print(model2.wv.similar_by_vector(difference_vector))
     
     # print(model2.wv.most_similar(positive=difference_vector))
