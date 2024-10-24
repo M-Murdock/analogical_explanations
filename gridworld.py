@@ -10,6 +10,7 @@ from simple_rl.agents import QLearningAgent
 # from mdp import run_mdp, generate_policies_for_agents
 from simple_rl.run_experiments import run_single_agent_on_mdp
 from trajectory import create_embeddings
+from ngrams import create_ngrams
 # , find_closest_reward, initialize_common_ground, select_analogical_example
 
 def main():
@@ -19,6 +20,7 @@ def main():
     optimal_trajectories, rewards = create_optimal_trajectories(map_name="easygrid.txt", num_agents=3, episodes=1000, steps=200, slip_prob=0.1)
     # print(optimal_trajectories)
     # print(rewards)
+    print("DONE")
     # -------------------------
     # -----------------------
     
@@ -27,11 +29,16 @@ def main():
     # STEP 2: Create embeddings of the trajectories (using whatever technique)
     # -------------------------
     # -----------------------
-    embedded_trajectories = create_embeddings(optimal_trajectories, rewards, "reward-trajectory")
+    embedded_trajectories = create_ngrams(optimal_trajectories, rewards, "state-action")
+    # embedded_trajectories = create_embeddings(optimal_trajectories, rewards, "state-action")
+    print(embedded_trajectories)
     # print(embedded_trajectories)
+
     # -------------------------
     # -----------------------
+    # TODO: We need to establish common ground first
     # STEP 3: Use parallelogram method
+    
     # -------------------------
     # -----------------------
 
@@ -56,14 +63,10 @@ def main():
     # mdp.visualize_agent(ql_agent)
     
 
-def create_optimal_trajectories(map_name="easygrid.txt", num_agents=3, episodes=1000, steps=200, slip_prob=0.1):
-    
-    
+def create_optimal_trajectories(map_name="easygrid.txt", num_agents=3, episodes=1000, steps=200, slip_prob=0.1, traj_len=5):
     mdps = [GridWorldMDPClass.make_grid_world_from_file(map_name, randomize=True, num_goals=1, name=None, goal_num=None, slip_prob=slip_prob) for _ in range(0, num_agents)]
-    actions = mdps[0].get_actions()
-    
+    actions = mdps[0].get_actions() 
     q_learning_agents = [QLearningAgent(actions=actions) for _ in range(0, num_agents)]
-
     # train policy
     for i in range(0, len(q_learning_agents)):
         run_single_agent_on_mdp(q_learning_agents[i], mdps[i], episodes=episodes, steps=steps, verbose=False)
@@ -73,6 +76,8 @@ def create_optimal_trajectories(map_name="easygrid.txt", num_agents=3, episodes=
     rewards = []
     for i in range(0, num_agents):
         traj, r = _run_mdp(q_learning_agents[i], mdps[i])
+        # if not (len(traj ) == traj_len):
+        # create_optimal_trajectories(map_name=map_name, num_agents=num_agents, episodes=episodes, steps=steps, slip_prob=slip_prob, traj_len=traj_len)
         optimal_trajectories.append(traj)
         rewards.append(r)
     
