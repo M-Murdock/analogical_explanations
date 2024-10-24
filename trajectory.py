@@ -1,29 +1,6 @@
-from AE import AE
-import torch
-import torch.utils.data as data_utils
-import numpy as np
-import re
-
-# Embedding types:
-# S-A 
-# S-A-Reward 
-
-# -------------------------
-# -------------------------
-# Create an embedding of a specified type
-def _create_vector(trajectory, r, embedding_type):
-    s, a = _get_sa_sequences(trajectory)
-    
-    # NOTE: This is something to play around with. Maybe use an AE?
-    # I'll probably have to flatten this to make it work
-    if embedding_type == "state-action": 
-        return [s, a]
-    elif embedding_type == "state-action-reward":
-        return [s, a, r]
-    # use np to flatten the array
-    
-# -------------------------
-# -------------------------
+from simple_rl.tasks.grid_world import GridWorldMDPClass
+from simple_rl.agents import QLearningAgent
+from simple_rl.run_experiments import run_single_agent_on_mdp
 
 
 # -------------------------
@@ -44,75 +21,99 @@ def _get_sa_sequences(trajectories):
             temp_state.append("" + str(s[0]) + "-" + str(s[1]))
             
         # Convert up/down/left/right to numbers
-        a_sequence = [t[1] for t in traj]
-           
-           
+        a_sequence = [t[1] for t in traj]   
         actions.append(a_sequence)
         states.append(temp_state)   
-        # print("actions")
-        # print(actions)
-        # print("states")
-        # print(states)
 
     
     return states, actions
 # -------------------------
 # -------------------------
-
-
-# -------------------------
-# -------------------------
-def paralellogram_analogy(embedding_A, diff_vector):
-    new_point = embedding_A - diff_vector # NOTE: We might want to add here instead of subtracting. I'm not sure.
-    return find_closest_embedding(new_point)
-# -------------------------
-# -------------------------    
-
-# -------------------------
-# -------------------------
-# NOTE: This is buggy
-def create_embeddings(trajectories, reward, embedding_type):
-    vectors = [_create_vector(trajectories[i], reward[i], embedding_type) for i in range(0, len(trajectories))]
-
-#     # initialize the Autoencoder model with input dimension equal to the length of a trajectory
-    # model = AE(input_dim=len(vectors))
-
-    # # prepare features and labels for training
-    # features = torch.FloatTensor(vectors)
-    # labels = torch.FloatTensor(vectors)
+# get the lists of states and actions
+def save_traj_to_file(trajectories, rewards, file_name="state-action.txt", ngram_type="state-action"):
+    contents = ""
+    s_seq, a_seq = _get_sa_sequences(trajectories)
     
-#     # create a TensorDataset and DataLoader for training
-#     train = data_utils.TensorDataset(features, labels)
-#     train_loader = data_utils.DataLoader(train, batch_size=50, shuffle=True)
+    for traj_num in range(0, len(s_seq)): # go through each trajectory
+        for i in range(0, len(a_seq[traj_num])):
+            # ----------------------------------------------------------------
+            if ngram_type == "state-action":
+                # save state-action pairs to the file
+                contents += " " + s_seq[traj_num][i] + "" + a_seq[traj_num][i]
+            # ----------------------------------------------------------------        
+            if ngram_type == "action-reward":
+                # save action-reward pairs to the file
+                contents += " " + a_seq[traj_num][i] + "" + str(rewards[traj_num][i])   
+            # ----------------------------------------------------------------
+            if ngram_type == "state-reward":
+                # save state to the file
+                contents += " " + s_seq[traj_num][i] + "" + str(rewards[traj_num][i])   
+            # ----------------------------------------------------------------
+            if ngram_type == "states":
+                # save state sequence to the file
+                contents += " " + s_seq[traj_num][i] + ""
+            # ----------------------------------------------------------------
+            if ngram_type == "actions":
+                # save action sequence to the file
+                contents += " " + a_seq[traj_num][i] + ""
+            # ----------------------------------------------------------------
+            if ngram_type == "state-action-reward":
+                # save state-action-reward to the file
+                contents += " " + s_seq[traj_num][i] + "" + a_seq[traj_num][i] + str(rewards[traj_num][i]) 
+            # ----------------------------------------------------------------  
+        contents += "."
+    
+            
+    f = open(file_name, "w")
+    f.write(contents)
+    f.close()
 
-#     # train the Autoencoder model
-#     model.train(train_loader, 100)
+def create_optimal_trajectories(map_name="easygrid.txt", num_agents=3, episodes=1000, steps=200, slip_prob=0.1, traj_len=5):
+    mdps = [GridWorldMDPClass.make_grid_world_from_file(map_name, randomize=True, num_goals=1, name=None, goal_num=None, slip_prob=slip_prob) for _ in range(0, num_agents)]
+    # See: https://github.com/david-abel/simple_rl/blob/master/examples/viz_example.py
+    actions = mdps[0].get_actions() 
+    q_learning_agents = [QLearningAgent(actions=actions) for _ in range(0, num_agents)]
+    # train policy
+    for i in range(0, len(q_learning_agents)):
+        run_single_agent_on_mdp(q_learning_agents[i], mdps[i], episodes=episodes, steps=steps, verbose=False)
 
-#     # create trajectory objects with the original trajectory, reward, and trained encoder module
-#     trajectories = []
-#     for traj_num in range(0, len(traj_info_list)):
-#         trajectories.append(Traj(traj_info_list[traj_num][0], traj_info_list[traj_num][1], model.encoder[traj_num]))
+    # get the trajectories and their associated rewards
+    optimal_trajectories = []
+    rewards = []
+    for i in range(0, num_agents):
+        traj, r = _run_mdp(q_learning_agents[i], mdps[i])
+        # if not (len(traj ) == traj_len):
+        # create_optimal_trajectories(map_name=map_name, num_agents=num_agents, episodes=episodes, steps=steps, slip_prob=slip_prob, traj_len=traj_len)
+        optimal_trajectories.append(traj)
+        rewards.append(r)
+    
+    # return a list of optimal trajectories
+    return optimal_trajectories, rewards, q_learning_agents, mdps
 
-#     return trajectories
-    return vectors
-# -------------------------
-# -------------------------
 
+def _run_mdp(agent, mdp):
+    trajectory = [] 
+    rewards = []
+    state = mdp.get_init_state()
 
+    while not state.is_terminal():
+        # Compute the agent's policy.
+        action = agent.act(state, None, learning=False)
 
+        # Terminal check.
+        if state.is_terminal():
+            break
 
-# -------------------------
-# -------------------------
-def find_closest_embedding(trajectories, embeddings, traj_of_interest, technique):
-    # This is where we find distances between our trajectory of interest and the other trajectories in the space
-    if technique == "subtraction":
-        dist = []
-        for t in trajectories:
-            dist.append(t - traj_of_interest)
-        # find smallest vector (larger than 0)
-        closest_indices = sorted(range(len(dist)), key=lambda sub: dist[sub])[:K]
-        # closest_trajectories = [sorted_trajectories[i] for i in closest_indices]
-# -------------------------
-# -------------------------        
+        # Execute in MDP.
+        _, next_state = mdp.execute_agent_action(action)
 
-        
+        trajectory.append((state, action))
+        rewards.append(agent.get_value(state) )
+
+        # Update pointer.
+        state = next_state
+
+    # Reset the MDP, tell the agent the episode is over.
+    mdp.reset()
+    agent.end_of_episode()
+    return trajectory, rewards
