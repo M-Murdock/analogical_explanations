@@ -3,6 +3,9 @@ from simple_rl.agents import QLearningAgent
 from simple_rl.run_experiments import run_single_agent_on_mdp
 import matplotlib.pyplot as plt
 import numpy as np
+import sklearn
+from sklearn.decomposition import PCA
+from matplotlib.widgets import Slider, Button, RadioButtons
 
 
 # -------------------------
@@ -153,3 +156,4 @@ def visualize_trajectory(trajectories, labels=["A", "B", "C", "D"]):
         title='Trajectory graph')
     ax.grid()
     plt.show()
+

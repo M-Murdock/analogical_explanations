@@ -4,13 +4,15 @@
 from __future__ import print_function
 from ngrams import create_ngrams, get_vector, find_most_similar_vector
 from trajectory import save_traj_to_file, create_optimal_trajectories, visualize_trajectory
+from interactivePlot import InteractivePlot
 
 
 def main():
     # -------------------------
     # -----------------------
     # STEP 1: Create Trajectories (via optimal policies)
-    optimal_trajectories, rewards, ql_agents, mdps = create_optimal_trajectories(map_name="maps/easygrid.txt", num_agents=10, episodes=1000, steps=200, slip_prob=0.1)
+    NUM_TRAJECTORIES = 10
+    optimal_trajectories, rewards, ql_agents, mdps = create_optimal_trajectories(map_name="maps/easygrid.txt", num_agents=NUM_TRAJECTORIES, episodes=1000, steps=200, slip_prob=0.1)
     # -------------------------
     # -----------------------
     
@@ -60,12 +62,16 @@ def main():
         else:
             D_TRAJECTORY_INDEX = r[0]
             break
+    d_trajectory = get_vector(D_TRAJECTORY_INDEX, model, trajectory_objs)
     
-
-    # print(unfiltered_similarity_ranking)
-    # print(D_TRAJECTORY_INDEX)
+    # print(optimal_trajectories[C_TRAJECTORY_INDEX])
+    # print(np.array(optimal_trajectories[C_TRAJECTORY_INDEX]).ravel())
+    # plot_parallelogram([a_trajectory, b_trajectory, c_trajectory, d_trajectory])
+    # paralellogram = InteractivePlot(vector_embeddings=[a_trajectory, b_trajectory, c_trajectory, d_trajectory], all_vecs=[get_vector(i, model, trajectory_objs) for i in range(0, len(trajectory_objs))])
+    paralellogram = InteractivePlot(all_vector_embeddings=[get_vector(i, model, trajectory_objs) for i in range(0, len(trajectory_objs))], embedding_indices=[A_TRAJECTORY_INDEX, B_TRAJECTORY_INDEX, C_TRAJECTORY_INDEX, D_TRAJECTORY_INDEX])
+  
     # plot the trajectory on a graph
-    visualize_trajectory([optimal_trajectories[A_TRAJECTORY_INDEX], optimal_trajectories[B_TRAJECTORY_INDEX], optimal_trajectories[C_TRAJECTORY_INDEX], optimal_trajectories[D_TRAJECTORY_INDEX]])
+    # visualize_trajectory([optimal_trajectories[A_TRAJECTORY_INDEX], optimal_trajectories[B_TRAJECTORY_INDEX], optimal_trajectories[C_TRAJECTORY_INDEX], optimal_trajectories[D_TRAJECTORY_INDEX]])
     # -------------------------
     # -----------------------
     # visualize the two "similar" trajectories
