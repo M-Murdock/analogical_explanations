@@ -68,7 +68,9 @@ def main():
     # print(np.array(optimal_trajectories[C_TRAJECTORY_INDEX]).ravel())
     # plot_parallelogram([a_trajectory, b_trajectory, c_trajectory, d_trajectory])
     # paralellogram = InteractivePlot(vector_embeddings=[a_trajectory, b_trajectory, c_trajectory, d_trajectory], all_vecs=[get_vector(i, model, trajectory_objs) for i in range(0, len(trajectory_objs))])
-    paralellogram = InteractivePlot(all_vector_embeddings=[get_vector(i, model, trajectory_objs) for i in range(0, len(trajectory_objs))], embedding_indices=[A_TRAJECTORY_INDEX, B_TRAJECTORY_INDEX, C_TRAJECTORY_INDEX, D_TRAJECTORY_INDEX])
+    # optimal_trajs = [optimal_trajectories[A_TRAJECTORY_INDEX], optimal_trajectories[B_TRAJECTORY_INDEX], optimal_trajectories[C_TRAJECTORY_INDEX], optimal_trajectories[D_TRAJECTORY_INDEX]]
+    # optimal_trajs = optimal_trajectories
+    paralellogram = InteractivePlot(all_vector_embeddings=[get_vector(i, model, trajectory_objs) for i in range(0, len(trajectory_objs))], embedding_indices=[A_TRAJECTORY_INDEX, B_TRAJECTORY_INDEX, C_TRAJECTORY_INDEX, D_TRAJECTORY_INDEX], optimal=optimal_trajectories)
   
     # plot the trajectory on a graph
     # visualize_trajectory([optimal_trajectories[A_TRAJECTORY_INDEX], optimal_trajectories[B_TRAJECTORY_INDEX], optimal_trajectories[C_TRAJECTORY_INDEX], optimal_trajectories[D_TRAJECTORY_INDEX]])
