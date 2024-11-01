@@ -4,26 +4,29 @@ from sklearn.decomposition import PCA
 from matplotlib.widgets import Slider, Button, RadioButtons
 import matplotlib.pyplot as plt
 import numpy as np
-from trajectory import _get_sa_sequence
+from embedding_space import EmbeddingSpace
 
 class InteractivePlot:
-    def __init__(self, all_vector_embeddings, embedding_indices=[0, 1, 2, 3], labels=["A", "B", "C", "D"], optimal=[]):
-        
-        self.all_vector_embeddings = all_vector_embeddings
+
+    def __init__(self, embedding_space, embedding_indices=[0, 1, 2, 3]):
+        self.embedding_space = embedding_space
+        self.all_vector_embeddings = embedding_space.get_all_vectors()
         self.embedding_indices = embedding_indices
-        self.labels = labels
-        self.optimal = optimal
+        
+        
+        # create list of all the optimal trajectories (so we only have to do it once)
+        self._generate_visual_trajectories()
         
         # perform PCA
         pca = PCA(n_components=2) 
-        self.principal_components = pca.fit_transform(all_vector_embeddings)
+        self.principal_components = pca.fit_transform(self.all_vector_embeddings)
 
         # make the graphs
         self.fig, self.ax = plt.subplots(1, 4)
         self.fig.set_figwidth(15)
 
         # All potential values for D
-        slider_values = [i for i in range(0, len(all_vector_embeddings))]
+        slider_values = [i for i in range(0, len(self.all_vector_embeddings))]
         
         # create subplots for each graph
         self.parallelogram_axis = self.ax[0]
@@ -67,31 +70,27 @@ class InteractivePlot:
         self.parallelogram_axis.plot([C[0], D[0]], [C[1], D[1]], linewidth=1, zorder=1)
         
         
-    # def visualize_trajectory(self, labels=["A", "B", "C", "D"]):
+    def _generate_visual_trajectories(self): # NOTE: Fix this to make it more efficient
+        self.all_of_x, self.all_of_y = self.embedding_space.generate_sa_sequences()
+
+        for t in self.embedding_indices:
+            x = [s[0] for s in self.all_of_x[t]]
+            y = [s[1] for s in self.all_of_y[t]]
+            self.all_of_x.append(x)
+            self.all_of_y.append(y)
+
+
     def visualize_trajectory(self):
-        
-        all_of_x = []
-        all_of_y = []
-        
         # based on the indices for A, B, C,and D 
-        optimal_trajectories = [self.optimal[t] for t in self.embedding_indices]
-        
-        for trajectory in optimal_trajectories:
-            states, _ = _get_sa_sequence(trajectory)
-        
-            x = [s[0] for s in states]
-            y = [s[1] for s in states]
-            all_of_x.append(x)
-            all_of_y.append(y)
-        
-        for i in range(0, len(optimal_trajectories)):
-            self.trajectory_axis.plot(all_of_x[i], all_of_y[i], c=(0.1, 0.2, 0.5, 0.3))
+        for e in self.embedding_indices:
+            self.trajectory_axis.plot(self.all_of_x[e], self.all_of_y[e], c=(0.1, 0.2, 0.5, 0.3))
         
 
         self.trajectory_axis.set(xlabel='X', ylabel='Y',
             title='Trajectory graph')
         self.trajectory_axis.grid()
         plt.show()   
+        
         
     def update(self, val):
         # Clear the current plot
