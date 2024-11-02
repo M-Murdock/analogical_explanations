@@ -13,26 +13,26 @@ class InteractivePlot:
         self.all_vector_embeddings = embedding_space.get_all_vectors()
         self.embedding_indices = embedding_indices
         
-        
-        # create list of all the optimal trajectories (so we only have to do it once)
-        self._generate_visual_trajectories()
-        
         # perform PCA
         pca = PCA(n_components=2) 
         self.principal_components = pca.fit_transform(self.all_vector_embeddings)
 
+        # create list of all the optimal trajectories (so we only have to do it once)
+        self._generate_visual_trajectories()
+        
         # make the graphs
-        self.fig, self.ax = plt.subplots(1, 4)
+        # self.fig, self.ax = plt.subplots(1, 4)
+        self.fig, self.ax = plt.subplots(nrows=2, ncols=2)
         self.fig.set_figwidth(15)
 
         # All potential values for D
         slider_values = [i for i in range(0, len(self.all_vector_embeddings))]
         
         # create subplots for each graph
-        self.parallelogram_axis = self.ax[0]
-        self.trajectory_axis = self.ax[1]
-        self.D_axis = self.ax[2]
-        self.reset_axis = self.ax[3]
+        self.parallelogram_axis = self.ax[0, 0]
+        self.trajectory_axis = self.ax[0, 1]
+        self.D_axis = self.ax[1, 0]
+        self.reset_axis = self.ax[1, 1]
         
         # create slider
         self.D_slider = Slider(
@@ -70,25 +70,34 @@ class InteractivePlot:
         self.parallelogram_axis.plot([C[0], D[0]], [C[1], D[1]], linewidth=1, zorder=1)
         
         
-    def _generate_visual_trajectories(self): # NOTE: Fix this to make it more efficient
-        self.all_of_x, self.all_of_y = self.embedding_space.generate_sa_sequences()
-
-        for t in self.embedding_indices:
-            x = [s[0] for s in self.all_of_x[t]]
-            y = [s[1] for s in self.all_of_y[t]]
+    def _generate_visual_trajectories(self): # NOTE: Fix this to make it more efficient 
+        self.all_of_x = []
+        self.all_of_y = []
+        
+        for t in range(0, len(self.principal_components)):
+            x = [s[0] for s in self.embedding_space.state_coords[t]]
+            y = [s[1] for s in self.embedding_space.state_coords[t]]
             self.all_of_x.append(x)
             self.all_of_y.append(y)
 
 
     def visualize_trajectory(self):
-        # based on the indices for A, B, C,and D 
-        for e in self.embedding_indices:
-            self.trajectory_axis.plot(self.all_of_x[e], self.all_of_y[e], c=(0.1, 0.2, 0.5, 0.3))
         
+        # based on the indices for A, B, C,and D 
+        for e in self.embedding_indices[0:3]:
+            self.trajectory_axis.plot(self.all_of_x[self.embedding_indices[e]], self.all_of_y[self.embedding_indices[e]], color='r')
+        
+        #  plot D separately to make it a different color
+        self.trajectory_axis.plot(self.all_of_x[self.embedding_indices[3]], self.all_of_y[self.embedding_indices[3]], color='b')
+        # print(self.all_of_x[self.embedding_indices[3]], " ", self.all_of_y[self.embedding_indices[3]])
 
         self.trajectory_axis.set(xlabel='X', ylabel='Y',
             title='Trajectory graph')
-        self.trajectory_axis.grid()
+        # self.trajectory_axis.grid()
+        self.trajectory_axis.grid(color='g', linestyle='-', linewidth=1)
+        
+        self.trajectory_axis.set_yticklabels([])
+        self.trajectory_axis.set_xticklabels([])
         plt.show()   
         
         

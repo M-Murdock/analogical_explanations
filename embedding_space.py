@@ -15,14 +15,15 @@ class EmbeddingSpace:
         # self.new_model()
         self.load_model()
         
+    def load(self):
+        self.load_model()
+        
+    def rebuild(self):
+        self.new_model()
     # ----------------------------------------------------------------
     # ----------------------------------------------------------------
     # Utilities
     # ----------------------------------------------------------------
-    # def _save_tokens_to_file(self, sentences, save_file_name="sentence_tokens.txt"):
-    #     with open(save_file_name, "w") as txt_file:
-    #         for line in sentences:
-    #             txt_file.write(" ".join(line) + "\n") # works with any number of elements in a line
                 
     def _save_optimal_trajectories(self, save_file_name="state-action.txt"):
         with open(save_file_name, "wb") as fp:
@@ -60,6 +61,8 @@ class EmbeddingSpace:
         self._create_optimal_trajectories(episodes=1000, steps=200, slip_prob=0.1)
         self._save_optimal_trajectories()
         
+        self._get_sa_sequences_from_traj()
+        
         # convert trajectories to tokenized form
         sentences = self._traj_to_sentences()
         sentence_words = self._tokenize(sentences)
@@ -67,6 +70,7 @@ class EmbeddingSpace:
         # store all the sentences as TaggedDocument objects
         self.trajectory_objs = [TaggedDocument(doc, [i]) for i, doc in enumerate(sentence_words)]
 
+        self._states_to_coord()
         # train the model on our sentences
         self.model = Doc2Vec(vector_size=100, min_count=3, epochs=20)
         self.model.build_vocab(self.trajectory_objs)
@@ -85,6 +89,8 @@ class EmbeddingSpace:
         self.model = Doc2Vec.load(file_name)
         # load the optimal trajectories
         self._load_optimal_trajectories()
+        self._get_sa_sequences_from_traj()
+        self._states_to_coord()
         
     # ----------------------------------------------------------------
     # ----------------------------------------------------------------
@@ -115,34 +121,33 @@ class EmbeddingSpace:
     # ----------------------------------------------------------------
     def _traj_to_sentences(self, save_file_name="state-action.txt"):
         contents = ""
-        s_seq, a_seq = self.generate_sa_sequences()
         
-        for traj_num in range(0, len(s_seq)): # go through each trajectory
-            for i in range(0, len(a_seq[traj_num])):
+        for traj_num in range(0, len(self.state_sequences)): # go through each trajectory
+            for i in range(0, len(self.actions_sequences[traj_num])):
                 # ----------------------------------------------------------------
                 if self.N_GRAM_TYPE == "state-action":
                     # save state-action pairs to the file
-                    contents += " " + s_seq[traj_num][i] + "" + a_seq[traj_num][i]
+                    contents += " " + self.state_sequences[traj_num][i] + "" + self.actions_sequences[traj_num][i]
                 # ----------------------------------------------------------------        
                 if self.N_GRAM_TYPE == "action-reward":
                     # save action-reward pairs to the file
-                    contents += " " + a_seq[traj_num][i] + "" + str(self.rewards[traj_num][i])   
+                    contents += " " + self.actions_sequences[traj_num][i] + "" + str(self.rewards[traj_num][i])   
                 # ----------------------------------------------------------------
                 if self.N_GRAM_TYPE == "state-reward":
                     # save state to the file
-                    contents += " " + s_seq[traj_num][i] + "" + str(self.rewards[traj_num][i])   
+                    contents += " " + self.state_sequences[traj_num][i] + "" + str(self.rewards[traj_num][i])   
                 # ----------------------------------------------------------------
                 if self.N_GRAM_TYPE == "states":
                     # save state sequence to the file
-                    contents += " " + s_seq[traj_num][i] + ""
+                    contents += " " + self.state_sequences[traj_num][i] + ""
                 # ----------------------------------------------------------------
                 if self.N_GRAM_TYPE == "actions":
                     # save action sequence to the file
-                    contents += " " + a_seq[traj_num][i] + ""
+                    contents += " " + self.actions_sequences[traj_num][i] + ""
                 # ----------------------------------------------------------------
                 if self.N_GRAM_TYPE == "state-action-reward":
                     # save state-action-reward to the file
-                    contents += " " + s_seq[traj_num][i] + "" + a_seq[traj_num][i] + str(self.rewards[traj_num][i]) 
+                    contents += " " + self.state_sequences[traj_num][i] + "" + self.state_sequences[traj_num][i] + str(self.rewards[traj_num][i]) 
                 # ----------------------------------------------------------------  
             contents += "."
         
@@ -152,9 +157,9 @@ class EmbeddingSpace:
     # ----------------------------------------------------------------
     # Generate state-action sequences based on optimal trajectories
     # ----------------------------------------------------------------
-    def generate_sa_sequences(self):
-        states = [] 
-        actions = []
+    def _get_sa_sequences_from_traj(self):
+        self.state_sequences = [] 
+        self.actions_sequences = []
         
         for traj in self.optimal_trajectories:
             # get the list of states for the current trajectory
@@ -166,10 +171,10 @@ class EmbeddingSpace:
                 temp_state.append("" + str(s[0]) + "-" + str(s[1]))
                 
             a_sequence = [t[1] for t in traj]   
-            actions.append(a_sequence)
-            states.append(temp_state)   
+            self.actions_sequences.append(a_sequence)
+            self.state_sequences.append(temp_state)   
 
-        return states, actions
+        return self.state_sequences, self.actions_sequences
     
     def _run_mdp(self, agent, mdp):
         trajectory = [] 
@@ -198,6 +203,10 @@ class EmbeddingSpace:
         agent.end_of_episode()
         return trajectory, rewards
             
+        # ----------------------------------------------------------------
+    # ----------------------------------------------------------------
+    # Get vector representations of the trajectories
+    # ----------------------------------------------------------------
     def get_vector(self, traj_index):
         # select one of the vector representations of a sentence
         vector = self.model.docvecs[traj_index]
@@ -207,6 +216,18 @@ class EmbeddingSpace:
     def get_all_vectors(self):
         all_vectors = []
         for i in range(0, len(self.model.docvecs)):
-            all_vectors.append(self.get_vector(i))
+            all_vectors.append(self.model.docvecs[i])
         return all_vectors
+    
+    # converts state representation into xy coordinates
+    def _states_to_coord(self):
+        self.state_coords = []
+        for traj in self.state_sequences:
+            traj_temp = []
+            for s in traj:
+                split_temp = s.split("-")
+                traj_temp.append((int(split_temp[0]), int(split_temp[1])))
+            self.state_coords.append(traj_temp)
+        # print(translated_states)
+        # return translated_states
         
