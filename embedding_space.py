@@ -12,41 +12,30 @@ class EmbeddingSpace:
         self.FILE_NAME = FILE_NAME
         self.MAP_NAME = MAP_NAME
         
-        self.new_model()
-        # self.load_model()
+        # self.new_model()
+        self.load_model()
         
     # ----------------------------------------------------------------
     # ----------------------------------------------------------------
     # Utilities
     # ----------------------------------------------------------------
-    def _save_tokens_to_file(self, sentences, save_file_name="sentence_tokens.txt"):
-        with open(save_file_name, "w") as txt_file:
-            for line in sentences:
-                txt_file.write(" ".join(line) + "\n") # works with any number of elements in a line
+    # def _save_tokens_to_file(self, sentences, save_file_name="sentence_tokens.txt"):
+    #     with open(save_file_name, "w") as txt_file:
+    #         for line in sentences:
+    #             txt_file.write(" ".join(line) + "\n") # works with any number of elements in a line
                 
     def _save_optimal_trajectories(self, save_file_name="state-action.txt"):
         with open(save_file_name, "wb") as fp:
             pickle.dump(self.optimal_trajectories, fp)
-        # f = open(save_file_name, "w")
-        # f.write(str(self.optimal_trajectories))
-        # f.close()
 
-    def _load_optimal_trajectories(self, load_file_name="state-action.txt"):
-        # Load trajectories from file
-        # self.optimal_trajectories = []
-        # with open(load_file_name, "r") as txt_file:
-        #     for l in txt_file:
-        #         line = l.split(" ")
-        #         if len(line) > 1:
-        #             self.optimal_trajectories.append(line)
-        
-        with open(load_file_name, "rb") as fp:   # Unpickling
+
+    def _load_optimal_trajectories(self, load_file_name="state-action.txt"): 
+        with open(load_file_name, "rb") as fp:   
             self.optimal_trajectories = pickle.load(fp)
                     
                 
 
     def _tokenize(self, sentences):
-        sentence_words_txt = []
         sentence_words = []
 
         # iterate through each sentence in the file
@@ -60,23 +49,16 @@ class EmbeddingSpace:
 
             sentence_words.append(temp)
             
-            temp.append('\n')
-            sentence_words_txt.append(temp)
-    
-        # print(sentence_words_txt)
-        self._save_tokens_to_file(sentence_words_txt)
         return sentence_words
         
     # ----------------------------------------------------------------
     # ----------------------------------------------------------------
     # Create a new model and save it for later retrieval
     # ----------------------------------------------------------------
-    # list of list of tuples
     def new_model(self, file_name="model.bin"):
         # create optimal trajectories + rewards, then save them
         self._create_optimal_trajectories(episodes=1000, steps=200, slip_prob=0.1)
         self._save_optimal_trajectories()
-        # print("Optimal type: ", self.optimal_trajectories[0][0][0])
         
         # convert trajectories to tokenized form
         sentences = self._traj_to_sentences()
@@ -93,27 +75,6 @@ class EmbeddingSpace:
         # save the model
         self.model.save(file_name)
         
-        # print(self.generate_sa_sequences())
-        
-        
-        # # open and read the file of trajectories:
-        # traj_file = open(self.FILE_NAME)
-        # sentences = traj_file.read()
-        
-        
-        # # print("SENTENCES: " + sentences)
-        # sentence_words = self._tokenize(sentences)
-        # # self._save_traj_to_file()
-        
-        # # store all the sentences as TaggedDocument objects
-        # self.trajectory_objs = [TaggedDocument(doc, [i]) for i, doc in enumerate(sentence_words)]
-
-        # # train the model on our sentences
-        # self.model = Doc2Vec(vector_size=100, min_count=3, epochs=20)
-        # self.model.build_vocab(self.trajectory_objs)
-        # self.model.train(self.trajectory_objs, total_examples=self.model.corpus_count, epochs=self.model.epochs)
-        
-        # self.model.save(file_name)
         
     # ----------------------------------------------------------------
     # ----------------------------------------------------------------
@@ -123,7 +84,6 @@ class EmbeddingSpace:
         # load the model
         self.model = Doc2Vec.load(file_name)
         # load the optimal trajectories
-        # self._load_tokens_from_file()
         self._load_optimal_trajectories()
         
     # ----------------------------------------------------------------
@@ -187,37 +147,16 @@ class EmbeddingSpace:
             contents += "."
         
         return contents
-        # f = open(save_file_name, "w")
-        # f.write(contents)
-        # f.close()
         
     # ----------------------------------------------------------------
     # ----------------------------------------------------------------
     # Generate state-action sequences based on optimal trajectories
     # ----------------------------------------------------------------
-    def generate_sa_sequences(self, read_file_name="optimal_trajectories.txt"):
+    def generate_sa_sequences(self):
         states = [] 
         actions = []
         
-        # for traj in self.optimal_trajectories:
-        #     # get the list of states for the current trajectory
-        #     s_sequence = [t[0] for t in traj]
-            
-        #     temp_state = []
-        #     # get the string for the current state
-        #     for s in s_sequence:
-        #         print(s)
-        #         temp_state.append("" + str(s[0]) + "-" + str(s[1]))
-                
-        #     a_sequence = [t[1] for t in traj]   
-        #     actions.append(a_sequence)
-        #     states.append(temp_state)   
-        # return states, actions
-
-        # print(self.optimal_trajectories)
-        print(self.optimal_trajectories[0])
         for traj in self.optimal_trajectories:
-            # print(traj[0], '\n')
             # get the list of states for the current trajectory
             s_sequence = [t[0] for t in traj]
             
@@ -229,6 +168,7 @@ class EmbeddingSpace:
             a_sequence = [t[1] for t in traj]   
             actions.append(a_sequence)
             states.append(temp_state)   
+
         return states, actions
     
     def _run_mdp(self, agent, mdp):
@@ -266,7 +206,6 @@ class EmbeddingSpace:
         
     def get_all_vectors(self):
         all_vectors = []
-        # for i in range(0, len(self.trajectory_objs)): model.docvecs[i]
         for i in range(0, len(self.model.docvecs)):
             all_vectors.append(self.get_vector(i))
         return all_vectors
