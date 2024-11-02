@@ -2,7 +2,7 @@
 
 # Python imports.
 from __future__ import print_function
-from ngrams import create_ngrams, get_vector, find_most_similar_vector
+# from ngrams import create_ngrams, get_vector, find_most_similar_vector
 # from trajectory import save_traj_to_file, create_optimal_trajectories, visualize_trajectory
 from interactivePlot import InteractivePlot
 from embedding_space import EmbeddingSpace
