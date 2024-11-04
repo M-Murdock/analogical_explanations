@@ -17,19 +17,12 @@ def main():
     # Options for n-gram type include: "state-action", "action-reward", "states", "actions", "state-action-reward", "state-reward"
     N_GRAM_TYPE = "state-reward"
     
-    # optimal_trajectories, rewards, ql_agents, mdps = create_optimal_trajectories(map_name="maps/easygrid.txt", num_agents=NUM_TRAJECTORIES, episodes=1000, steps=200, slip_prob=0.1)
+
     embedding_space = EmbeddingSpace(NUM_TRAJECTORIES, N_GRAM_TYPE)
+    # embedding_space.test_parallelogram()
     # -------------------------
     # -----------------------
     
-    # -------------------------
-    # -----------------------
-    
-    
-    # save the trajectories to a file so that we can turn them into embeddings later
-    # save_traj_to_file(optimal_trajectories, rewards, file_name=("saved_trajectories/" + N_GRAM_TYPE + ".txt"), ngram_type=N_GRAM_TYPE) # NOTE: this can be commented out
-    # create embeddings
-    # model, trajectory_objs = create_ngrams(("saved_trajectories/" + N_GRAM_TYPE + ".txt"))
     # -------------------------
     # -----------------------
     
@@ -70,7 +63,6 @@ def main():
     
 
     
-    # paralellogram = InteractivePlot(all_vector_embeddings=[get_vector(i, model, trajectory_objs) for i in range(0, len(trajectory_objs))], embedding_indices=[A_TRAJECTORY_INDEX, B_TRAJECTORY_INDEX, C_TRAJECTORY_INDEX, D_TRAJECTORY_INDEX], optimal=optimal_trajectories)
     paralellogram = InteractivePlot(embedding_space)
     # -------------------------
     # -----------------------

@@ -8,10 +8,12 @@ from embedding_space import EmbeddingSpace
 
 class InteractivePlot:
 
-    def __init__(self, embedding_space, embedding_indices=[0, 1, 2, 3]):
+    def __init__(self, embedding_space, embedding_indices=[0, 1, 2, 3], abcd_colors=['blue', 'green', 'red' , 'purple'],):
         self.embedding_space = embedding_space
         self.all_vector_embeddings = embedding_space.get_all_vectors()
         self.embedding_indices = embedding_indices
+        
+        self.abcd_colors = abcd_colors
         
         # perform PCA
         pca = PCA(n_components=2) 
@@ -61,13 +63,13 @@ class InteractivePlot:
         D = self.principal_components[self.embedding_indices[3]]
 
         # Plot all the points
-        self.parallelogram_axis.scatter([self.principal_components[self.embedding_indices[i]][0] for i in range(0,len(self.embedding_indices))], [self.principal_components[self.embedding_indices[i]][1] for i in range(0,len(self.embedding_indices))], c=(0.1, 0.2, 0.5, 0.3))
+        self.parallelogram_axis.scatter([self.principal_components[self.embedding_indices[i]][0] for i in range(0,len(self.embedding_indices))], [self.principal_components[self.embedding_indices[i]][1] for i in range(0,len(self.embedding_indices))], color=self.abcd_colors)
         
         # Draw a parallelogram
         # A -> B
-        self.parallelogram_axis.plot([A[0], B[0]], [A[1], B[1]], linewidth=1, zorder=1) 
+        self.parallelogram_axis.plot([A[0], B[0]], [A[1], B[1]], linewidth=1, zorder=1, color="gray") 
         # C -> D
-        self.parallelogram_axis.plot([C[0], D[0]], [C[1], D[1]], linewidth=1, zorder=1)
+        self.parallelogram_axis.plot([C[0], D[0]], [C[1], D[1]], linewidth=1, zorder=1, color="gray")
         
         
     def _generate_visual_trajectories(self): # NOTE: Fix this to make it more efficient 
@@ -84,17 +86,11 @@ class InteractivePlot:
     def visualize_trajectory(self):
         
         # based on the indices for A, B, C,and D 
-        for e in self.embedding_indices[0:3]:
-            self.trajectory_axis.plot(self.all_of_x[self.embedding_indices[e]], self.all_of_y[self.embedding_indices[e]], color='r')
+        for e in range(0, len(self.embedding_indices)):
+            self.trajectory_axis.plot(self.all_of_x[self.embedding_indices[e]], self.all_of_y[self.embedding_indices[e]], color=self.abcd_colors[e], linewidth=1, linestyle='--')
+            # indicate the star positions with colored dots
+            self.trajectory_axis.scatter(self.all_of_x[self.embedding_indices[e]][0],self.all_of_y[self.embedding_indices[e]][0], color=self.abcd_colors[e], s=100)
         
-        #  plot D separately to make it a different color
-        self.trajectory_axis.plot(self.all_of_x[self.embedding_indices[3]], self.all_of_y[self.embedding_indices[3]], color='b')
-        # print(self.all_of_x[self.embedding_indices[3]], " ", self.all_of_y[self.embedding_indices[3]])
-
-        self.trajectory_axis.set(xlabel='X', ylabel='Y',
-            title='Trajectory graph')
-        # self.trajectory_axis.grid()
-        self.trajectory_axis.grid(color='g', linestyle='-', linewidth=1)
         
         self.trajectory_axis.set_yticklabels([])
         self.trajectory_axis.set_xticklabels([])

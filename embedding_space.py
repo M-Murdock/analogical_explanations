@@ -4,6 +4,8 @@ from simple_rl.run_experiments import run_single_agent_on_mdp
 from nltk.tokenize import sent_tokenize, word_tokenize
 from gensim.models.doc2vec import Doc2Vec, TaggedDocument
 import pickle
+import matplotlib.pyplot as plt
+from sklearn.decomposition import PCA
 
 class EmbeddingSpace:
     def __init__(self, NUM_TRAJECTORIES=50, N_GRAM_TYPE="state-action", FILE_NAME="state-action.txt", MAP_NAME="maps/easygrid.txt"):
@@ -23,8 +25,8 @@ class EmbeddingSpace:
     # ----------------------------------------------------------------
     # ----------------------------------------------------------------
     # Utilities
-    # ----------------------------------------------------------------
-                
+    # ---------------------------------------------------------------- 
+
     def _save_optimal_trajectories(self, save_file_name="state-action.txt"):
         with open(save_file_name, "wb") as fp:
             pickle.dump(self.optimal_trajectories, fp)
@@ -228,6 +230,66 @@ class EmbeddingSpace:
                 split_temp = s.split("-")
                 traj_temp.append((int(split_temp[0]), int(split_temp[1])))
             self.state_coords.append(traj_temp)
-        # print(translated_states)
-        # return translated_states
+            
+            
+    # ----------------------------------------------------------------
+    # ----------------------------------------------------------------
+    # Just for debugging purposes
+    # ----------------------------------------------------------------       
         
+    def test_parallelogram(self):
+        data = ["I love machine learning. Its awesome.",
+        "I love coding in python",
+        "I love building chatbots",
+        "they chat amagingly well"]
+
+        tagged_data = [TaggedDocument(words=word_tokenize(_d.lower()), tags=[str(i)]) for i, _d in enumerate(data)]
+        max_epochs = 1000
+        vec_size = 20
+        alpha = 0.025
+
+        model = Doc2Vec(vector_size=vec_size, alpha=alpha, min_alpha=0.00025, min_count=1, dm =1)
+        
+        model.build_vocab(tagged_data)
+
+        for epoch in range(max_epochs):
+            model.train(tagged_data,
+                        total_examples=model.corpus_count,
+                        epochs=model.epochs)
+            # decrease the learning rate
+            model.alpha -= 0.0002
+            # fix the learning rate, no decay
+            model.min_alpha = model.alpha
+            
+        A = word_tokenize("I love chatbots".lower())
+        vA = model.infer_vector(A)
+        B = word_tokenize("I love cats".lower())
+        vB = model.infer_vector(B)
+        C = word_tokenize("Aardvarks are nice".lower())
+        vC = model.infer_vector(C)
+        D = word_tokenize("Antelopes".lower())
+        vD = model.infer_vector(D)
+        
+        pca = PCA(n_components=2) 
+        principal_components = pca.fit_transform([vA, vB, vC, vD])
+
+        # Get the coordinates of each point
+        pA = principal_components[0]
+        pB = principal_components[1]
+        pC = principal_components[2]
+        pD = principal_components[3]
+
+        # Plot all the points
+        plt.scatter([principal_components[i][0] for i in range(0,4)], [principal_components[i][1] for i in range(0,4)], color=['blue', 'black', 'red', 'orange'])
+        
+        # Draw a parallelogram
+        # A -> B
+        plt.plot([pA[0], pB[0]], [pA[1], pB[1]], linewidth=1, zorder=1, color="gray") 
+        # C -> D
+        plt.plot([pC[0], pD[0]], [pC[1], pD[1]], linewidth=1, zorder=1, color="gray")
+        
+        # to find most similar doc using tags
+        similar_doc = model.docvecs.most_similar('3')
+        print(similar_doc)
+        
+        plt.show()  
