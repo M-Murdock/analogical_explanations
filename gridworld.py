@@ -6,6 +6,7 @@ from __future__ import print_function
 # from trajectory import save_traj_to_file, create_optimal_trajectories, visualize_trajectory
 from interactivePlot import InteractivePlot
 from embedding_space import EmbeddingSpace
+from interactivePlotABCD import InteractivePlotABCD
 
 
 def main():
@@ -63,7 +64,8 @@ def main():
     
 
     
-    paralellogram = InteractivePlot(embedding_space)
+    paralellogram = InteractivePlotABCD(embedding_space)
+    # paralellogram = InteractivePlot(embedding_space)
     # -------------------------
     # -----------------------
     
