@@ -1,5 +1,4 @@
 # Reference: https://spotintelligence.com/2023/09/06/doc2vec/
-from nltk.tokenize import sent_tokenize, word_tokenize
 import pickle
 from collections import Counter
 from tensorflow.keras.models import Sequential

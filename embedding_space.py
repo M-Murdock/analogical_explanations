@@ -4,6 +4,7 @@ from simple_rl.run_experiments import run_single_agent_on_mdp
 import pickle
 from sklearn.decomposition import PCA
 from behavior_model import BehaviorModel
+from scipy import spatial
 
 
 class EmbeddingSpace:
@@ -151,5 +152,24 @@ class EmbeddingSpace:
                 traj_temp.append((int(split_temp[0]), int(split_temp[1])))
             self.state_coords.append(traj_temp)
 
+    def infer_D(self, ABC_indices=[]):
+        A = self.vectors[ABC_indices[0]]
+        B = self.vectors[ABC_indices[1]]
+        C = self.vectors[ABC_indices[2]]
+        
+        diff_vector = A-B 
+        D_estimate = C + diff_vector
+
+        
+        # find the vector closest to D_estimate
+        tree = spatial.KDTree(self.vectors)
+        dist, indices = tree.query(D_estimate, k=4) 
+        
+        index = 0
+        for i in range(0,3):
+            if not (self.vectors[indices[i]].all() == A.all() or self.vectors[indices[i]].all() == B.all() or self.vectors[indices[i]].all() == C.all()):
+                break
+            index = indices[i]
             
+        return index
         

@@ -175,9 +175,14 @@ class InteractivePlotABCD:
         
     def infer(self, event):
         # TODO: use actual strategy to infer D. This is a placeholder
-        self.embedding_indices[3] = 8 #len(self.embedding_indices)-1
+        # self.embedding_indices[3] = 8 #len(self.embedding_indices)-1
 
-        self.D_slider.set_val(self.embedding_indices[3])
+        index = self.embedding_space.infer_D(ABC_indices=self.embedding_indices[0:3])
+
+        self.embedding_indices[3] = self.principal_components[index]
+        
+        self.D_slider.set_val(index)
+
         self.plot_embeddings()
         self.visualize_trajectory()
         
