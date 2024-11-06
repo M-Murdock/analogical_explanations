@@ -10,14 +10,15 @@ class InteractivePlotABCD:
 
     def __init__(self, embedding_space, embedding_indices=[0, 1, 2, 3], abcd_colors=['blue', 'green', 'red' , 'purple'],):
         self.embedding_space = embedding_space
-        self.all_vector_embeddings = embedding_space.get_all_vectors()
+        self.vector_embeddings = embedding_space.vectors
         self.embedding_indices = embedding_indices
+        self.state_coords = self.embedding_space.state_coords
         
         self.abcd_colors = abcd_colors
         
         # perform PCA
         pca = PCA(n_components=2) 
-        self.principal_components = pca.fit_transform(self.all_vector_embeddings)
+        self.principal_components = pca.fit_transform(self.vector_embeddings)
 
         # create list of all the optimal trajectories (so we only have to do it once)
         self._generate_visual_trajectories()
@@ -28,7 +29,7 @@ class InteractivePlotABCD:
         self.fig.set_figwidth(25)
 
         # All potential values for D
-        slider_values = [i for i in range(0, len(self.all_vector_embeddings))]
+        slider_values = [i for i in range(0, len(self.vector_embeddings))]
         
         # create subplots for each graph
         self.parallelogram_axis = self.ax[0, 0]
@@ -110,9 +111,9 @@ class InteractivePlotABCD:
         self.all_of_x = []
         self.all_of_y = []
         
-        for t in range(0, len(self.principal_components)):
-            x = [s[0] for s in self.embedding_space.state_coords[t]]
-            y = [s[1] for s in self.embedding_space.state_coords[t]]
+        for t in range(0, len(self.state_coords)-1):
+            x = [s[0] for s in self.state_coords[t]]
+            y = [s[1] for s in self.state_coords[t]]
             self.all_of_x.append(x)
             self.all_of_y.append(y)
 

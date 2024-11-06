@@ -20,14 +20,14 @@ def main():
     
 
     embedding_space = EmbeddingSpace(NUM_TRAJECTORIES, N_GRAM_TYPE)
-    embedding_space.new_model()
-    # embedding_space.load_model()
+    # embedding_space.new_model()
+    embedding_space.load_model()
     # embedding_space.test_parallelogram()
     # -------------------------
     
 
     
-    # paralellogram = InteractivePlotABCD(embedding_space)
+    paralellogram = InteractivePlotABCD(embedding_space)
     # -------------------------
     # -----------------------
     

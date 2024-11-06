@@ -3,9 +3,10 @@ from nltk.tokenize import sent_tokenize, word_tokenize
 import pickle
 from collections import Counter
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Embedding, Dense, Dropout, Flatten
+from tensorflow.keras.layers import Embedding, Dense
 import numpy as np
 from tensorflow.keras.optimizers import Adam
+import keras
 
 
 class BehaviorModel:
@@ -20,6 +21,10 @@ class BehaviorModel:
         self.processed_data = [self._preprocess(doc) for doc in self.documents]
 
         # self.train()
+        
+    def load(self):
+        self.model = keras.models.load_model("traj_model.keras")
+        self.doc_vectors = self.model.get_layer('doc_embedding').get_weights()[0]
         
     def _preprocess(self, doc):
         words = doc.split(" ")
@@ -36,7 +41,7 @@ class BehaviorModel:
         all_words = [word for doc in self.processed_data for word in doc]
         vocab = Counter(all_words)
         word2index = {word: i for i, (word, _) in enumerate(vocab.items())}
-        print(word2index)
+
         index2word = {i: word for word, i in word2index.items()}
         vocab_size = len(vocab)
 
@@ -100,6 +105,8 @@ class BehaviorModel:
         doc_id = 0  # Example: Document ID 0
         print(f"Document vector for document {doc_id}:")
         print(self.doc_vectors[doc_id])
+        
+        self.model.save_model("traj_model.keras")
         
 
 #         # Test: Get the vector for a word
