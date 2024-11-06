@@ -3,13 +3,10 @@
 from sklearn.decomposition import PCA
 from matplotlib.widgets import Slider, Button, RadioButtons
 import matplotlib.pyplot as plt
-import numpy as np
-from embedding_space import EmbeddingSpace
-from matplotlib.gridspec import GridSpec
 
 class InteractivePlotABCD:
 
-    def __init__(self, embedding_space, embedding_indices=[0, 1, 2, 3], abcd_colors=['blue', 'green', 'red' , 'purple'],):
+    def __init__(self, embedding_space, embedding_indices=[0, 0, 0, 0], abcd_colors=['blue', 'green', 'red' , 'purple'],):
         self.embedding_space = embedding_space
         self.vector_embeddings = embedding_space.vectors
         self.embedding_indices = embedding_indices
@@ -30,9 +27,9 @@ class InteractivePlotABCD:
         
         # make the graphs
         self.fig = plt.figure(constrained_layout=True, figsize=(12, 10))
-        widths = [20, 20, 1, 1, 1, 1, 1, 1]
-        heights = [20, 5, 2, 2, 2, 2, 5, 5]
-        spec = self.fig.add_gridspec(ncols=8, nrows=8, width_ratios=widths, height_ratios=heights)
+        widths = [20, 20, 1, 1, 1, 1, 1, 1, 1]
+        heights = [20, 5, 2, 2, 5, 2, 5, 5, 1]
+        spec = self.fig.add_gridspec(ncols=9, nrows=9, width_ratios=widths, height_ratios=heights)
         
         self.parallelogram_axis = self.fig.add_subplot(spec[0, 0])
 
@@ -50,7 +47,7 @@ class InteractivePlotABCD:
         
         self.D_axis = self.fig.add_subplot(spec[3, 1])
         
-
+        self.radio_axis = self.fig.add_subplot(spec[4, 0])
         
         
         # create slider A
@@ -86,13 +83,18 @@ class InteractivePlotABCD:
         self.D_slider.on_changed(self.update)
         
         # create reset button
-        button = Button(self.reset_axis, 'Reset', hovercolor='0.975') 
-        button.on_clicked(self.reset)
+        self.button = Button(self.reset_axis, 'Reset', hovercolor='0.975') 
+        self.button.on_clicked(self.reset)
         
         # create 'infer D' button
-        infer_button = Button(self.infer_axis, 'Infer D', hovercolor='0.975') 
-        infer_button.on_clicked(self.infer)
+        self.infer_button = Button(self.infer_axis, 'Infer D', hovercolor='0.975') 
+        self.infer_button.on_clicked(self.infer)
 
+        # create radio buttons
+        self.radio_button = RadioButtons(self.radio_axis, ["Inference Mode", "Free Play Mode"], active=0) 
+        self.radio_button.on_clicked(self.mode_selection)
+        
+        self.mode_selection("Inference Mode")
         # plot our data
         self.plot_embeddings()
         self.visualize_trajectory()
@@ -174,16 +176,27 @@ class InteractivePlotABCD:
         self.plot_embeddings()
         
     def infer(self, event):
-        # TODO: use actual strategy to infer D. This is a placeholder
-        # self.embedding_indices[3] = 8 #len(self.embedding_indices)-1
-
         index = self.embedding_space.infer_D(ABC_indices=self.embedding_indices[0:3])
 
         self.embedding_indices[3] = self.principal_components[index]
-        
         self.D_slider.set_val(index)
 
         self.plot_embeddings()
         self.visualize_trajectory()
+        
+    def mode_selection(self, event):
+        if event == "Inference Mode":
+            self.D_slider.active = False
+            self.infer_button.active = True 
+            
+            self.D_axis.set_visible(False)
+            self.infer_axis.set_visible(True)
+        else:
+            self.D_slider.active = True
+            self.infer_button.active = False 
+            
+            self.D_axis.set_visible(True)
+            self.infer_axis.set_visible(False)
+
         
         

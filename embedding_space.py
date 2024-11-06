@@ -8,10 +8,10 @@ from scipy import spatial
 
 
 class EmbeddingSpace:
-    def __init__(self, NUM_TRAJECTORIES=50, N_GRAM_TYPE="state-action", FILE_NAME="state-action.txt", MAP_NAME="maps/easygrid.txt"):
+    def __init__(self, NUM_TRAJECTORIES=50, N_GRAM_TYPE="state-action", MAP_NAME="maps/easygrid.txt"):
         self.NUM_TRAJECTORIES = NUM_TRAJECTORIES
         self.N_GRAM_TYPE = N_GRAM_TYPE
-        self.FILE_NAME = FILE_NAME
+        self.FILE_NAME = "n-grams.txt"
         self.MAP_NAME = MAP_NAME
 
         self._generate_optimal_trajectories()
