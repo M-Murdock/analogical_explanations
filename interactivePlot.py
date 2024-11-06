@@ -1,4 +1,5 @@
 # Reference: https://community.plotly.com/t/using-one-slider-to-control-multiple-subplots-not-multiple-traces/13955/4
+# Takes a list of vector embeddings as input 
 
 from sklearn.decomposition import PCA
 from matplotlib.widgets import Slider, Button, RadioButtons

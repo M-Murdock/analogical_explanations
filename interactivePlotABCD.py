@@ -24,8 +24,8 @@ class InteractivePlotABCD:
         
         # make the graphs
         # self.fig, self.ax = plt.subplots(1, 4)
-        self.fig, self.ax = plt.subplots(nrows=4, ncols=2, figsize=(15, 15))
-        # self.fig.set_figwidth(15)
+        self.fig, self.ax = plt.subplots(nrows=4, ncols=2)
+        self.fig.set_figwidth(25)
 
         # All potential values for D
         slider_values = [i for i in range(0, len(self.all_vector_embeddings))]
@@ -38,17 +38,7 @@ class InteractivePlotABCD:
         self.C_axis = self.ax[2, 0]
         self.D_axis = self.ax[2, 1]
         self.reset_axis = self.ax[3, 0]
-        self.empty_axis = self.ax[3, 1]
-        
-
-        # gs = self.fig.add_gridspec(4,2)
-        # self.parallelogram_axis = self.fig.add_subplot(gs[0, 0])
-        # self.trajectory_axis = self.fig.add_subplot(gs[0, 1])
-        # self.A_axis = self.fig.add_subplot(gs[1, 0])
-        # self.B_axis = self.fig.add_subplot(gs[1, 1])
-        # self.C_axis = self.fig.add_subplot(gs[2, 0])
-        # self.D_axis = self.fig.add_subplot(gs[2, 1])
-        # self.reset_axis = self.fig.add_subplot(gs[3, :])
+        self.infer_axis = self.ax[3, 1]
         
         
         
@@ -87,6 +77,10 @@ class InteractivePlotABCD:
         # create reset button
         button = Button(self.reset_axis, 'Reset', hovercolor='0.975') 
         button.on_clicked(self.reset)
+        
+        # create 'infer D' button
+        infer_button = Button(self.infer_axis, 'Infer D', hovercolor='0.975') 
+        infer_button.on_clicked(self.infer)
 
         # plot our data
         self.plot_embeddings()
@@ -167,5 +161,13 @@ class InteractivePlotABCD:
         self.C_slider.reset()  
         self.D_slider.reset()
         self.plot_embeddings()
+        
+    def infer(self, event):
+        # TODO: use actual strategy to infer D. This is a placeholder
+        self.embedding_indices[3] = 8 #len(self.embedding_indices)-1
+
+        self.D_slider.set_val(self.embedding_indices[3])
+        self.plot_embeddings()
+        self.visualize_trajectory()
         
         

@@ -6,6 +6,9 @@ from gensim.models.doc2vec import Doc2Vec, TaggedDocument
 import pickle
 import matplotlib.pyplot as plt
 from sklearn.decomposition import PCA
+from behavior_model import BehaviorModel
+import tensorflow as tf
+from tensorflow import keras
 
 class EmbeddingSpace:
     def __init__(self, NUM_TRAJECTORIES=50, N_GRAM_TYPE="state-action", FILE_NAME="state-action.txt", MAP_NAME="maps/easygrid.txt"):
@@ -15,90 +18,34 @@ class EmbeddingSpace:
         self.MAP_NAME = MAP_NAME
         
         # self.new_model()
-        self.load_model()
+        # self.load_model()
+        self._generate_optimal_trajectories()
+        self._traj_to_sentences()
+        self._states_to_coord()
         
-    def load(self):
-        self.load_model()
+        with open(self.FILE_NAME, "rb") as fp:   
+            self.training_data = pickle.load(fp)
+            
+        self.behavior_model = BehaviorModel(FILE_NAME)
         
-    def rebuild(self):
-        self.new_model()
+    
+        
+        
+    def new_model(self):
+        self.behavior_model.train()
+        self.behavior_model.model.save("traj_model.keras")
+        print("New model created")
+    def load_model(self):
+        self.behavior_model.model.load("traj_model.keras")
     # ----------------------------------------------------------------
     # ----------------------------------------------------------------
     # Utilities
     # ---------------------------------------------------------------- 
-
-    def _save_optimal_trajectories(self, save_file_name="state-action.txt"):
-        with open(save_file_name, "wb") as fp:
-            pickle.dump(self.optimal_trajectories, fp)
-
-
-    def _load_optimal_trajectories(self, load_file_name="state-action.txt"): 
-        with open(load_file_name, "rb") as fp:   
-            self.optimal_trajectories = pickle.load(fp)
-                    
-                
-
-    def _tokenize(self, sentences):
-        sentence_words = []
-
-        # iterate through each sentence in the file
-        for i in sent_tokenize(sentences):
-            temp = []
-
-            # tokenize the sentence into words
-            for j in word_tokenize(i):
-                if not j == '.': 
-                    temp.append(j.lower())
-
-            sentence_words.append(temp)
-            
-        return sentence_words
-        
-    # ----------------------------------------------------------------
-    # ----------------------------------------------------------------
-    # Create a new model and save it for later retrieval
-    # ----------------------------------------------------------------
-    def new_model(self, file_name="model.bin"):
-        # create optimal trajectories + rewards, then save them
-        self._create_optimal_trajectories(episodes=1000, steps=200, slip_prob=0.1)
-        self._save_optimal_trajectories()
-        
-        self._get_sa_sequences_from_traj()
-        
-        # convert trajectories to tokenized form
-        sentences = self._traj_to_sentences()
-        sentence_words = self._tokenize(sentences)
-        
-        # store all the sentences as TaggedDocument objects
-        self.trajectory_objs = [TaggedDocument(doc, [i]) for i, doc in enumerate(sentence_words)]
-
-        self._states_to_coord()
-        # train the model on our sentences
-        self.model = Doc2Vec(vector_size=100, min_count=3, epochs=20)
-        self.model.build_vocab(self.trajectory_objs)
-        self.model.train(self.trajectory_objs, total_examples=self.model.corpus_count, epochs=self.model.epochs)
-        
-        # save the model
-        self.model.save(file_name)
-        
-        
-    # ----------------------------------------------------------------
-    # ----------------------------------------------------------------
-    # Load an existing model
-    # ----------------------------------------------------------------
-    def load_model(self, file_name="model.bin"):
-        # load the model
-        self.model = Doc2Vec.load(file_name)
-        # load the optimal trajectories
-        self._load_optimal_trajectories()
-        self._get_sa_sequences_from_traj()
-        self._states_to_coord()
-        
-    # ----------------------------------------------------------------
-    # ----------------------------------------------------------------
-    # Create a set of optimal trajectories
-    # ----------------------------------------------------------------
-    def _create_optimal_trajectories(self, episodes=1000, steps=200, slip_prob=0.1):
+    
+    # Generate trajectories --> convert to sentences --> train model
+    
+    # Generate trajectories    
+    def _generate_optimal_trajectories(self, episodes=1000, steps=200, slip_prob=0.1):
         self.mdps = [GridWorldMDPClass.make_grid_world_from_file(self.MAP_NAME, randomize=True, num_goals=1, name=None, goal_num=None, slip_prob=slip_prob) for _ in range(0, self.NUM_TRAJECTORIES)]
         # See: https://github.com/david-abel/simple_rl/blob/master/examples/viz_example.py
         actions = self.mdps[0].get_actions() 
@@ -115,13 +62,24 @@ class EmbeddingSpace:
             traj, r = self._run_mdp(self.q_learning_agents[i], self.mdps[i])
             self.optimal_trajectories.append(traj)
             self.rewards.append(r)
-
     
-    # ----------------------------------------------------------------
-    # ----------------------------------------------------------------
-    # Convert trajectories to sentence format
-    # ----------------------------------------------------------------
-    def _traj_to_sentences(self, save_file_name="state-action.txt"):
+    # Convert to sentences
+    def _traj_to_sentences(self):
+        self.state_sequences = [] 
+        self.actions_sequences = []
+        
+        for traj in self.optimal_trajectories:
+            # get the list of states for the current trajectory
+            s_sequence = [t[0] for t in traj]
+            
+            temp_state = []
+            # get the string for the current state
+            for s in s_sequence:
+                temp_state.append("" + str(s[0]) + "-" + str(s[1]))
+                
+            a_sequence = [t[1] for t in traj]   
+            self.actions_sequences.append(a_sequence)
+            self.state_sequences.append(temp_state)   
         contents = ""
         
         for traj_num in range(0, len(self.state_sequences)): # go through each trajectory
@@ -151,32 +109,55 @@ class EmbeddingSpace:
                     # save state-action-reward to the file
                     contents += " " + self.state_sequences[traj_num][i] + "" + self.state_sequences[traj_num][i] + str(self.rewards[traj_num][i]) 
                 # ----------------------------------------------------------------  
-            contents += "."
-        
-        return contents
-        
-    # ----------------------------------------------------------------
-    # ----------------------------------------------------------------
-    # Generate state-action sequences based on optimal trajectories
-    # ----------------------------------------------------------------
-    def _get_sa_sequences_from_traj(self):
-        self.state_sequences = [] 
-        self.actions_sequences = []
-        
-        for traj in self.optimal_trajectories:
-            # get the list of states for the current trajectory
-            s_sequence = [t[0] for t in traj]
-            
-            temp_state = []
-            # get the string for the current state
-            for s in s_sequence:
-                temp_state.append("" + str(s[0]) + "-" + str(s[1]))
-                
-            a_sequence = [t[1] for t in traj]   
-            self.actions_sequences.append(a_sequence)
-            self.state_sequences.append(temp_state)   
+            contents += ";"
 
-        return self.state_sequences, self.actions_sequences
+        # save the new representation to a file
+        with open(self.FILE_NAME, "wb") as fp:
+            pickle.dump(contents, fp)
+        
+    # # ----------------------------------------------------------------
+    # # ----------------------------------------------------------------
+    # # Create a new model and save it for later retrieval
+    # # ----------------------------------------------------------------
+    # def new_model(self, file_name="model.bin"):
+    #     # create optimal trajectories + rewards, then save them
+    #     self._create_optimal_trajectories(episodes=1000, steps=200, slip_prob=0.1)
+    #     self._save_optimal_trajectories()
+        
+    #     self._get_sa_sequences_from_traj()
+        
+    #     # convert trajectories to tokenized form
+    #     sentences = self._traj_to_sentences()
+    #     sentence_words = self._tokenize(sentences)
+        
+    #     # store all the sentences as TaggedDocument objects
+    #     self.trajectory_objs = [TaggedDocument(doc, [i]) for i, doc in enumerate(sentence_words)]
+
+    #     self._states_to_coord()
+    #     # train the model on our sentences
+    #     self.model = Doc2Vec(vector_size=100, min_count=3, epochs=20)
+    #     self.model.build_vocab(self.trajectory_objs)
+    #     self.model.train(self.trajectory_objs, total_examples=self.model.corpus_count, epochs=self.model.epochs)
+        
+    #     # save the model
+    #     self.model.save(file_name)
+        
+        
+    # # ----------------------------------------------------------------
+    # # ----------------------------------------------------------------
+    # # Load an existing model
+    # # ----------------------------------------------------------------
+    # def load_model(self, file_name="model.bin"):
+    #     # load the model
+    #     self.model = Doc2Vec.load(file_name)
+    #     # load the optimal trajectories
+    #     self._load_optimal_trajectories()
+    #     self._get_sa_sequences_from_traj()
+    #     self._states_to_coord()
+        
+
+
+    
     
     def _run_mdp(self, agent, mdp):
         trajectory = [] 
@@ -205,21 +186,21 @@ class EmbeddingSpace:
         agent.end_of_episode()
         return trajectory, rewards
             
-        # ----------------------------------------------------------------
+    # ----------------------------------------------------------------
     # ----------------------------------------------------------------
     # Get vector representations of the trajectories
     # ----------------------------------------------------------------
-    def get_vector(self, traj_index):
-        # select one of the vector representations of a sentence
-        vector = self.model.docvecs[traj_index]
-        return vector
+    # def get_vector(self, traj_index):
+    #     # select one of the vector representations of a sentence
+    #     vector = self.model.docvecs[traj_index]
+    #     return vector
 
         
-    def get_all_vectors(self):
-        all_vectors = []
-        for i in range(0, len(self.model.docvecs)):
-            all_vectors.append(self.model.docvecs[i])
-        return all_vectors
+    # def get_all_vectors(self):
+    #     all_vectors = []
+    #     for i in range(0, len(self.model.docvecs)):
+    #         all_vectors.append(self.model.docvecs[i])
+    #     return all_vectors
     
     # converts state representation into xy coordinates
     def _states_to_coord(self):
@@ -231,65 +212,4 @@ class EmbeddingSpace:
                 traj_temp.append((int(split_temp[0]), int(split_temp[1])))
             self.state_coords.append(traj_temp)
             
-            
-    # ----------------------------------------------------------------
-    # ----------------------------------------------------------------
-    # Just for debugging purposes
-    # ----------------------------------------------------------------       
         
-    def test_parallelogram(self):
-        data = ["I love machine learning. Its awesome.",
-        "I love coding in python",
-        "I love building chatbots",
-        "they chat amagingly well"]
-
-        tagged_data = [TaggedDocument(words=word_tokenize(_d.lower()), tags=[str(i)]) for i, _d in enumerate(data)]
-        max_epochs = 1000
-        vec_size = 20
-        alpha = 0.025
-
-        model = Doc2Vec(vector_size=vec_size, alpha=alpha, min_alpha=0.00025, min_count=1, dm =1)
-        
-        model.build_vocab(tagged_data)
-
-        for epoch in range(max_epochs):
-            model.train(tagged_data,
-                        total_examples=model.corpus_count,
-                        epochs=model.epochs)
-            # decrease the learning rate
-            model.alpha -= 0.0002
-            # fix the learning rate, no decay
-            model.min_alpha = model.alpha
-            
-        A = word_tokenize("I love chatbots".lower())
-        vA = model.infer_vector(A)
-        B = word_tokenize("I love cats".lower())
-        vB = model.infer_vector(B)
-        C = word_tokenize("Aardvarks are nice".lower())
-        vC = model.infer_vector(C)
-        D = word_tokenize("Antelopes".lower())
-        vD = model.infer_vector(D)
-        
-        pca = PCA(n_components=2) 
-        principal_components = pca.fit_transform([vA, vB, vC, vD])
-
-        # Get the coordinates of each point
-        pA = principal_components[0]
-        pB = principal_components[1]
-        pC = principal_components[2]
-        pD = principal_components[3]
-
-        # Plot all the points
-        plt.scatter([principal_components[i][0] for i in range(0,4)], [principal_components[i][1] for i in range(0,4)], color=['blue', 'black', 'red', 'orange'])
-        
-        # Draw a parallelogram
-        # A -> B
-        plt.plot([pA[0], pB[0]], [pA[1], pB[1]], linewidth=1, zorder=1, color="gray") 
-        # C -> D
-        plt.plot([pC[0], pD[0]], [pC[1], pD[1]], linewidth=1, zorder=1, color="gray")
-        
-        # to find most similar doc using tags
-        similar_doc = model.docvecs.most_similar('3')
-        print(similar_doc)
-        
-        plt.show()  
