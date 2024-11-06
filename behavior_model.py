@@ -106,18 +106,6 @@ class BehaviorModel:
         print(f"Document vector for document {doc_id}:")
         print(self.doc_vectors[doc_id])
         
-        self.model.save_model("traj_model.keras")
+        self.model.save("traj_model.keras")
         
-
-#         # Test: Get the vector for a word
-        # word = "document"  # Example: Get the vector for the word "document"
-        # word_id = word2index.get(word, None)
-        # doc_id = 0  # Example: Document ID 0
-        # print(f"Document vector for document {doc_id}:")
-        # print(word_vectors[doc_id])
-#         if word_id is not None:
-#             print(f"\nWord vector for '{word}':")
-#             print(word_vectors[word_id])
-#         else:
-#             print(f"\nWord '{word}' not in vocabulary.")
     

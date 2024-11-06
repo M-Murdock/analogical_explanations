@@ -5,6 +5,7 @@ from matplotlib.widgets import Slider, Button, RadioButtons
 import matplotlib.pyplot as plt
 import numpy as np
 from embedding_space import EmbeddingSpace
+from matplotlib.gridspec import GridSpec
 
 class InteractivePlotABCD:
 
@@ -23,24 +24,33 @@ class InteractivePlotABCD:
         # create list of all the optimal trajectories (so we only have to do it once)
         self._generate_visual_trajectories()
         
-        # make the graphs
-        # self.fig, self.ax = plt.subplots(1, 4)
-        self.fig, self.ax = plt.subplots(nrows=4, ncols=2)
-        self.fig.set_figwidth(25)
 
         # All potential values for D
         slider_values = [i for i in range(0, len(self.vector_embeddings))]
         
-        # create subplots for each graph
-        self.parallelogram_axis = self.ax[0, 0]
-        self.trajectory_axis = self.ax[0, 1]
-        self.A_axis = self.ax[1, 0]
-        self.B_axis = self.ax[1, 1]
-        self.C_axis = self.ax[2, 0]
-        self.D_axis = self.ax[2, 1]
-        self.reset_axis = self.ax[3, 0]
-        self.infer_axis = self.ax[3, 1]
+        # make the graphs
+        self.fig = plt.figure(constrained_layout=True, figsize=(12, 10))
+        widths = [20, 20, 1, 1, 1, 1, 1, 1]
+        heights = [20, 5, 2, 2, 2, 2, 5, 5]
+        spec = self.fig.add_gridspec(ncols=8, nrows=8, width_ratios=widths, height_ratios=heights)
         
+        self.parallelogram_axis = self.fig.add_subplot(spec[0, 0])
+
+        self.trajectory_axis = self.fig.add_subplot(spec[0, 1])
+
+        self.reset_axis = self.fig.add_subplot(spec[1, 0])
+        
+        self.infer_axis = self.fig.add_subplot(spec[1, 1])
+        
+        self.A_axis = self.fig.add_subplot(spec[2, 0])
+        
+        self.B_axis = self.fig.add_subplot(spec[2, 1])
+
+        self.C_axis = self.fig.add_subplot(spec[3, 0])
+        
+        self.D_axis = self.fig.add_subplot(spec[3, 1])
+        
+
         
         
         # create slider A
