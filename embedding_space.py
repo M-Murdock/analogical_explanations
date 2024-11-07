@@ -11,14 +11,15 @@ class EmbeddingSpace:
     def __init__(self, NUM_TRAJECTORIES=50, N_GRAM_TYPE="state-action", MAP_NAME="maps/easygrid.txt"):
         self.NUM_TRAJECTORIES = NUM_TRAJECTORIES
         self.N_GRAM_TYPE = N_GRAM_TYPE
-        self.FILE_NAME = "n-grams.txt"
+        self.n_gram_file = N_GRAM_TYPE + "-n-grams.txt"
         self.MAP_NAME = MAP_NAME
+        self.model_save_file = N_GRAM_TYPE + "-model.keras"
 
         self._generate_optimal_trajectories()
         self._traj_to_sentences()
         self._states_to_coord()
         
-        with open(self.FILE_NAME, "rb") as fp:   
+        with open(self.n_gram_file, "rb") as fp:   
             self.training_data = pickle.load(fp)
             
         
@@ -26,12 +27,12 @@ class EmbeddingSpace:
         
         
     def new_model(self):
-        self.behavior_model = BehaviorModel(self.FILE_NAME)
+        self.behavior_model = BehaviorModel(self.n_gram_file, self.model_save_file)
         self.behavior_model.train()
         self.vectors = self.behavior_model.doc_vectors
         
     def load_model(self):
-        self.behavior_model = BehaviorModel(self.FILE_NAME)
+        self.behavior_model = BehaviorModel(self.n_gram_file, self.model_save_file)
         self.behavior_model.load()
         self.vectors = self.behavior_model.doc_vectors
     # ----------------------------------------------------------------
@@ -109,7 +110,7 @@ class EmbeddingSpace:
             contents += ";"
 
         # save the new representation to a file
-        with open(self.FILE_NAME, "wb") as fp:
+        with open(self.n_gram_file, "wb") as fp:
             pickle.dump(contents, fp)
 
     

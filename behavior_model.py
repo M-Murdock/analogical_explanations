@@ -9,8 +9,9 @@ import keras
 
 
 class BehaviorModel:
-    def __init__(self, training_file):
+    def __init__(self, training_file, model_save_file):
         self.training_data = None
+        self.model_save_file = model_save_file
         
         with open(training_file, "rb") as fp:   
             self.training_data = pickle.load(fp)
@@ -19,10 +20,9 @@ class BehaviorModel:
         self.documents = self._sent_to_list()
         self.processed_data = [self._preprocess(doc) for doc in self.documents]
 
-        # self.train()
         
     def load(self):
-        self.model = keras.models.load_model("traj_model.keras")
+        self.model = keras.models.load_model(self.model_save_file)
         self.doc_vectors = self.model.get_layer('doc_embedding').get_weights()[0]
         
     def _preprocess(self, doc):
@@ -47,7 +47,7 @@ class BehaviorModel:
         # Parameters
         vector_size = 10        # Dimension of word vectors and document vectors
         window_size = 2         # Context window size
-        epochs = 10 #100        # Number of training epochs
+        epochs = 100        # Number of training epochs
         batch_size = 1          # Batch size (for simplicity, we'll train one document at a time)
 
         # Generate training data (context words and document labels)
@@ -105,6 +105,6 @@ class BehaviorModel:
         print(f"Document vector for document {doc_id}:")
         print(self.doc_vectors[doc_id])
         
-        self.model.save("traj_model.keras")
+        self.model.save(self.model_save_file)
         
     
