@@ -2,7 +2,6 @@ from simple_rl.tasks.grid_world import GridWorldMDPClass
 from simple_rl.agents import QLearningAgent
 from simple_rl.run_experiments import run_single_agent_on_mdp
 import pickle
-from sklearn.decomposition import PCA
 from behavior_model import BehaviorModel
 from scipy import spatial
 

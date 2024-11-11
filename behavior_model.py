@@ -45,9 +45,9 @@ class BehaviorModel:
         vocab_size = len(vocab)
 
         # Parameters
-        vector_size = 2       # Dimension of word vectors and document vectors
+        vector_size = 3       # Dimension of word vectors and document vectors
         window_size = 2         # Context window size
-        epochs = 100        # Number of training epochs
+        epochs = 10#0        # Number of training epochs
         batch_size = 1          # Batch size (for simplicity, we'll train one document at a time)
 
         # Generate training data (context words and document labels)
