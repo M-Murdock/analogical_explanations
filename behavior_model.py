@@ -45,7 +45,7 @@ class BehaviorModel:
         vocab_size = len(vocab)
 
         # Parameters
-        vector_size = 10        # Dimension of word vectors and document vectors
+        vector_size = 2       # Dimension of word vectors and document vectors
         window_size = 2         # Context window size
         epochs = 100        # Number of training epochs
         batch_size = 1          # Batch size (for simplicity, we'll train one document at a time)
@@ -83,6 +83,7 @@ class BehaviorModel:
 
         # # Output layer: Prediction of context word using softmax
         self.model.add(Dense(vocab_size, activation='softmax'))
+        # self.model.add(Dense(vector_size, activation='softmax'))
 
         # Compile the model
         self.model.compile(loss='sparse_categorical_crossentropy', optimizer=Adam(), metrics=['accuracy'])

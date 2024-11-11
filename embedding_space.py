@@ -167,6 +167,7 @@ class EmbeddingSpace:
         dist, indices = tree.query(D_estimate, k=4) 
         
         index = 0
+        # make sure that the vector closest to D_estimate is not the original vectors A, B, or C
         for i in range(0,3):
             if not (self.vectors[indices[i]].all() == A.all() or self.vectors[indices[i]].all() == B.all() or self.vectors[indices[i]].all() == C.all()):
                 break

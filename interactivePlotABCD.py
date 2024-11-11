@@ -15,9 +15,11 @@ class InteractivePlotABCD:
         self.abcd_colors = abcd_colors
         
         # perform PCA
-        pca = PCA(n_components=2) 
-        self.principal_components = pca.fit_transform(self.vector_embeddings)
+        # pca = PCA(n_components=2) 
+        # self.principal_components = pca.fit_transform(self.vector_embeddings)
 
+        self.mode = "Inference Mode" # the mode currently selected by the user
+        self.inference_requested = False # whether or not the "infer" button has been clicked (while in "inference mode")
         # create list of all the optimal trajectories (so we only have to do it once)
         self._generate_visual_trajectories()
         
@@ -102,21 +104,21 @@ class InteractivePlotABCD:
 
     
     def plot_embeddings(self):
-    
-        # Get the coordinates of each point
-        A = self.principal_components[self.embedding_indices[0]]
-        B = self.principal_components[self.embedding_indices[1]]
-        C = self.principal_components[self.embedding_indices[2]]
-        D = self.principal_components[self.embedding_indices[3]]
+        if not (self.mode == "Inference Mode" and self.inference_requested == False): # if we have a value for D
+            # Get the coordinates of each point
+            A = self.vector_embeddings[self.embedding_indices[0]]
+            B = self.vector_embeddings[self.embedding_indices[1]]
+            C = self.vector_embeddings[self.embedding_indices[2]]
+            D = self.vector_embeddings[self.embedding_indices[3]]
 
-        # Plot all the points
-        self.parallelogram_axis.scatter([self.principal_components[self.embedding_indices[i]][0] for i in range(0,len(self.embedding_indices))], [self.principal_components[self.embedding_indices[i]][1] for i in range(0,len(self.embedding_indices))], color=self.abcd_colors)
-        
-        # Draw a parallelogram
-        # A -> B
-        self.parallelogram_axis.plot([A[0], B[0]], [A[1], B[1]], linewidth=1, zorder=1, color="gray") 
-        # C -> D
-        self.parallelogram_axis.plot([C[0], D[0]], [C[1], D[1]], linewidth=1, zorder=1, color="gray")
+            # Plot all the points
+            self.parallelogram_axis.scatter([self.vector_embeddings[self.embedding_indices[i]][0] for i in range(0,len(self.embedding_indices))], [self.vector_embeddings[self.embedding_indices[i]][1] for i in range(0,len(self.embedding_indices))], color=self.abcd_colors)
+            
+            # Draw a parallelogram
+            # A -> B
+            self.parallelogram_axis.plot([A[0], B[0]], [A[1], B[1]], linewidth=1, zorder=1, color="gray") 
+            # C -> D
+            self.parallelogram_axis.plot([C[0], D[0]], [C[1], D[1]], linewidth=1, zorder=1, color="gray")
         
         
     def _generate_visual_trajectories(self): # NOTE: Fix this to make it more efficient 
@@ -132,8 +134,13 @@ class InteractivePlotABCD:
 
     def visualize_trajectory(self):
         
+        if self.mode == "Inference Mode" and self.inference_requested == False: # if we don't yet have a value for D
+            num_points = 3
+        else: # otherwise, plot D
+            num_points = 4
+            
         # based on the indices for A, B, C,and D 
-        for e in range(0, len(self.embedding_indices)):
+        for e in range(0, num_points):
             self.trajectory_axis.plot(self.all_of_x[self.embedding_indices[e]], self.all_of_y[self.embedding_indices[e]], color=self.abcd_colors[e], linewidth=1, linestyle='--')
             # indicate the star positions with colored dots
             self.trajectory_axis.scatter(self.all_of_x[self.embedding_indices[e]][0],self.all_of_y[self.embedding_indices[e]][0], color=self.abcd_colors[e], s=100)
@@ -164,6 +171,8 @@ class InteractivePlotABCD:
         self.fig.canvas.draw_idle()
         
     def reset(self, event):
+        if self.mode == "Inference Mode": 
+            self.inference_requested = False
         # reset the plot to the initial state
         self.embedding_indices[0] = self.embedding_indices[0]
         self.embedding_indices[1] = self.embedding_indices[0]
@@ -174,11 +183,13 @@ class InteractivePlotABCD:
         self.C_slider.reset()  
         self.D_slider.reset()
         self.plot_embeddings()
+        self.visualize_trajectory()
         
     def infer(self, event):
+        self.inference_requested = True # note that the user has pressed the button to infer D
         index = self.embedding_space.infer_D(ABC_indices=self.embedding_indices[0:3])
 
-        self.embedding_indices[3] = self.principal_components[index]
+        self.embedding_indices[3] = self.vector_embeddings[index]
         self.D_slider.set_val(index)
 
         self.plot_embeddings()
@@ -186,12 +197,15 @@ class InteractivePlotABCD:
         
     def mode_selection(self, event):
         if event == "Inference Mode":
+            self.mode = "Inference Mode"
+            self.inference_requested = False
             self.D_slider.active = False
             self.infer_button.active = True 
             
             self.D_axis.set_visible(False)
             self.infer_axis.set_visible(True)
         else:
+            self.mode = "Free Play Mode"
             self.D_slider.active = True
             self.infer_button.active = False 
             
