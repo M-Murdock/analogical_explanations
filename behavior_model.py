@@ -8,6 +8,7 @@ from tensorflow.keras.optimizers import Adam
 import keras
 
 
+
 class BehaviorModel:
     def __init__(self, training_file, model_save_file):
         self.training_data = None
@@ -75,15 +76,11 @@ class BehaviorModel:
 
 
         # Input layer: Document vectors
-        # model.add(Embedding(input_dim=len(self.processed_data), output_dim=vector_size, name="doc_embedding"))
         self.model.add(Embedding(input_dim=len(self.processed_data), output_dim=vector_size, name="doc_embedding"))
 
-        # # Hidden layer: Word vectors
-        # model.add(Embedding(input_dim=vocab_size, output_dim=vector_size, name="word_embedding"))
-
-        # # Output layer: Prediction of context word using softmax
+        # Output layer: Prediction of context word using softmax
         self.model.add(Dense(vocab_size, activation='softmax'))
-        # self.model.add(Dense(vector_size, activation='softmax'))
+    
 
         # Compile the model
         self.model.compile(loss='sparse_categorical_crossentropy', optimizer=Adam(), metrics=['accuracy'])
@@ -93,19 +90,10 @@ class BehaviorModel:
 
         # After training, we can extract the document and word embeddings
         doc_embedding_layer = self.model.get_layer('doc_embedding')
-        # word_embedding_layer = model.get_layer('word_embedding')
 
         # Extract document vectors
-        self.doc_vectors = doc_embedding_layer.get_weights()[0]  # Shape: (num_documents, vector_size)
+        self.doc_vectors = doc_embedding_layer.get_weights()[0]  
 
-        # Extract word vectors
-        # word_vectors = word_embedding_layer.get_weights()[0]  # Shape: (vocab_size, vector_size)
-
-        # Test: Get the vector for a document
-        doc_id = 0  # Example: Document ID 0
-        print(f"Document vector for document {doc_id}:")
-        print(self.doc_vectors[doc_id])
-        
+        # Save the model so we can retrive it later
         self.model.save(self.model_save_file)
         
-    

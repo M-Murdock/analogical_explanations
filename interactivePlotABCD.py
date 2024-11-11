@@ -20,7 +20,7 @@ class InteractivePlotABCD:
         
 
         # All potential values for D
-        slider_values = [i for i in range(0, len(self.vector_embeddings))]
+        slider_values = [i for i in range(0, len(self.vector_embeddings)-1)]
         
         # make the graphs
         self.fig = plt.figure(constrained_layout=True, figsize=(12, 10))
@@ -123,7 +123,7 @@ class InteractivePlotABCD:
         self.all_of_x = []
         self.all_of_y = []
         
-        for t in range(0, len(self.state_coords)-1):
+        for t in range(0, len(self.state_coords)):
             x = [s[0] for s in self.state_coords[t]]
             y = [s[1] for s in self.state_coords[t]]
             self.all_of_x.append(x)
@@ -139,6 +139,7 @@ class InteractivePlotABCD:
             
         # based on the indices for A, B, C,and D 
         for e in range(0, num_points):
+            
             self.trajectory_axis.plot(self.all_of_x[self.embedding_indices[e]], self.all_of_y[self.embedding_indices[e]], color=self.abcd_colors[e], linewidth=1, linestyle='--')
             # indicate the start positions with colored dots
             self.trajectory_axis.scatter(self.all_of_x[self.embedding_indices[e]][0],self.all_of_y[self.embedding_indices[e]][0], color=self.abcd_colors[e], s=100)
