@@ -1,17 +1,18 @@
 from simple_rl.tasks.grid_world import GridWorldMDPClass
+# from simple_rl.tasks.grid_world.GridWorldMDPClass import GridWorldMDP
 from simple_rl.agents import QLearningAgent
 from simple_rl.run_experiments import run_single_agent_on_mdp
 import pickle
 from behavior_model import BehaviorModel
 from scipy import spatial
-
+import os
 
 class EmbeddingSpace:
-    def __init__(self, NUM_TRAJECTORIES=50, N_GRAM_TYPE="state-action", MAP_NAME="maps/easygrid.txt"):
-        self.NUM_TRAJECTORIES = NUM_TRAJECTORIES
+    def __init__(self, N_GRAM_TYPE="state-action", MAP_DIRECTORY="maps2/"):
+        self.NUM_TRAJECTORIES = 0
         self.N_GRAM_TYPE = N_GRAM_TYPE
         self.n_gram_file = "n-grams/" + N_GRAM_TYPE + "-n-grams.txt"
-        self.MAP_NAME = MAP_NAME
+        self.MAP_DIRECTORY = MAP_DIRECTORY
         self.model_save_file = "keras/" + N_GRAM_TYPE + "-model.keras"
 
         self._generate_optimal_trajectories()
@@ -42,9 +43,21 @@ class EmbeddingSpace:
     def _generate_optimal_trajectories(self, episodes=100, steps=200, slip_prob=0.1):
         # by default, movements are deterministic and reward is 1 for reaching goal
         
-        # create MDPs for each trajectory
-        self.mdps = [GridWorldMDPClass.make_grid_world_from_file(self.MAP_NAME, randomize=True, num_goals=1, name=None, goal_num=None, slip_prob=0) for _ in range(0, self.NUM_TRAJECTORIES)]
-        # See: https://github.com/david-abel/simple_rl/blob/master/examples/viz_example.py
+        # create MDPs for each possible trajectory (i.e. from every possible start position)
+        self.mdps = []
+
+        # for path in os.listdir(self.MAP_DIRECTORY): # look through everything in the directory of maps
+            
+        #     if os.path.isfile(os.path.join(self.MAP_DIRECTORY, path)): # check if current path is a file
+        #         filename = os.path.join(self.MAP_DIRECTORY, path)
+        #         print(filename)
+        #         self.mdps.append(GridWorldMDPClass.make_grid_world_from_file(filename, num_goals=1, name=None, slip_prob=slip_prob))
+
+        # self.NUM_TRAJECTORIES = len(self.mdps)
+        # print("NUM:", self.NUM_TRAJECTORIES)
+        self.mdps = [GridWorldMDPClass.make_grid_world_from_file(os.path.join(self.MAP_DIRECTORY, path), num_goals=1, name=None, slip_prob=slip_prob) for path in os.listdir(self.MAP_DIRECTORY)]
+        # self.mdps = [GridWorldMDPClass.make_grid_world_from_file("maps/easygrid.txt", num_goals=1, name=None, slip_prob=slip_prob) for _ in range(0,30)]
+        self.NUM_TRAJECTORIES = len(self.mdps)
         actions = self.mdps[0].get_actions() 
         # create Q-learning agents for each trajectory
         self.q_learning_agents = [QLearningAgent(actions=actions) for _ in range(0, self.NUM_TRAJECTORIES)]
@@ -61,7 +74,7 @@ class EmbeddingSpace:
             traj, r = self._run_mdp(self.q_learning_agents[i], self.mdps[i])
             self.optimal_trajectories.append(traj)
             self.rewards.append(r)
-    
+
     # Convert to sentences
     def _traj_to_sentences(self):
         self.state_sequences = [] 

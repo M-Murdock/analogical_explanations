@@ -20,7 +20,7 @@ class InteractivePlotABCD:
         
 
         # All potential values for D
-        slider_values = [i for i in range(0, len(self.vector_embeddings)-1)]
+        slider_values = [i for i in range(0, self.embedding_space.NUM_TRAJECTORIES)]
         
         # make the graphs
         self.fig = plt.figure(constrained_layout=True, figsize=(12, 10))
