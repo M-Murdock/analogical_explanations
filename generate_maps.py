@@ -2,7 +2,7 @@
 
 
 def main():
-    file = open('maps/easygrid_base.txt', 'r')
+    file = open('map_bases/easygrid_base.txt', 'r')
 
     # put data into array
     lines = file.read().split("\n")
@@ -22,7 +22,7 @@ def main():
 
 def place_agent(chars, l, c, index):
     chars[l][c] = 'a'
-    filename = 'maps2/easygrid_agent'+str(index)+'.txt'
+    filename = 'maps/easygrid_agent'+str(index)+'.txt'
     write_file(filename, chars)
     chars[l][c] = '-'
     

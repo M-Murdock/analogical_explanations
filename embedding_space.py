@@ -8,7 +8,7 @@ from scipy import spatial
 import os
 
 class EmbeddingSpace:
-    def __init__(self, N_GRAM_TYPE="state-action", MAP_DIRECTORY="maps2/"):
+    def __init__(self, N_GRAM_TYPE="state-action", MAP_DIRECTORY="maps/"):
         self.NUM_TRAJECTORIES = 0
         self.N_GRAM_TYPE = N_GRAM_TYPE
         self.n_gram_file = "n-grams/" + N_GRAM_TYPE + "-n-grams.txt"
