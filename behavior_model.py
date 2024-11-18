@@ -33,9 +33,9 @@ class BehaviorModel:
     def _sent_to_list(self):
         return self.training_data.split(';')
     
-   
+
         
-   # Formats data and trains the model     
+    # Formats data and trains the model     
     def train(self):
         # PV-DBOW (Distributed Bag of Words version of Paragraph Vector): In this approach, the 
         # model predicts words independently based solely on the document vector. It treats each 
