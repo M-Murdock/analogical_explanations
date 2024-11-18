@@ -1,4 +1,5 @@
-from simple_rl.tasks.grid_world import GridWorldMDPClass
+from simple_rl.tasks.taxi import TaxiOOMDPClass
+from simple_rl.tasks import TaxiOOMDP
 # from simple_rl.tasks.grid_world.GridWorldMDPClass import GridWorldMDP
 from simple_rl.agents import QLearningAgent
 from simple_rl.run_experiments import run_single_agent_on_mdp
@@ -26,12 +27,12 @@ class EmbeddingSpace:
     def new_model(self):
         self.behavior_model = BehaviorModel(self.n_gram_file, self.model_save_file)
         self.behavior_model.train()
-        self.vectors = self.behavior_model.encoder.doc_vectors
+        self.vectors = self.behavior_model.doc_vectors
         
     def load_model(self):
         self.behavior_model = BehaviorModel(self.n_gram_file, self.model_save_file)
         self.behavior_model.load()
-        self.vectors = self.behavior_model.encoder.doc_vectors
+        self.vectors = self.behavior_model.doc_vectors
     # ----------------------------------------------------------------
     # ----------------------------------------------------------------
     # Utilities
@@ -42,16 +43,19 @@ class EmbeddingSpace:
     # Generate trajectories    
     def _generate_optimal_trajectories(self, episodes=100, steps=200, slip_prob=0.1):
         # by default, movements are deterministic and reward is 1 for reaching goal
-        
+        agents =[ {"x":1, "y":1, "has_passenger":0}, {"x":1, "y":2, "has_passenger":0}, {"x":2, "y":2, "has_passenger":0}, {"x":3, "y":2, "has_passenger":0}, {"x":3, "y":3, "has_passenger":0}]
+        passengers = [{"x":4, "y":3, "dest_x":2, "dest_y":2, "in_taxi":0}]
+        walls = []
+        # taxi_mdp = TaxiOOMDP(5, 5, agent_loc=agent, walls=walls, passengers=passengers)
+        # self.mdps = [TaxiOOMDP(5, 5, agent=a, walls=walls, passengers=passengers) for a in agents]
         # create MDPs for each possible trajectory (i.e. from every possible start position)
-        self.mdps = [GridWorldMDPClass.make_grid_world_from_file(os.path.join(self.MAP_DIRECTORY, path), num_goals=1, name=None, slip_prob=slip_prob) for path in os.listdir(self.MAP_DIRECTORY)]
+        self.mdps = [self.make_grid_world_from_file(file_name="map_bases/easytaxi.txt")]
         
         self.NUM_TRAJECTORIES = len(self.mdps)
         actions = self.mdps[0].get_actions() 
         # create Q-learning agents for each trajectory
         self.q_learning_agents = [QLearningAgent(actions=actions) for _ in range(0, self.NUM_TRAJECTORIES)]
         
-
         # train policy
         for i in range(0, len(self.q_learning_agents)):
             run_single_agent_on_mdp(self.q_learning_agents[i], self.mdps[i], episodes, steps, verbose=False)
@@ -111,7 +115,7 @@ class EmbeddingSpace:
                     contents += " " + self.state_sequences[traj_num][i] + "" + self.state_sequences[traj_num][i] + str(self.rewards[traj_num][i]) 
                 # ----------------------------------------------------------------  
             contents += ";"
-
+        print(contents)
         # save the new representation to a file
         with open(self.n_gram_file, "wb") as fp:
             pickle.dump(contents, fp)
@@ -177,4 +181,82 @@ class EmbeddingSpace:
             index = indices[i]
             
         return index
+    
+    def make_grid_world_from_file(file_name, randomize=False, num_goals=1, name=None, goal_num=None, slip_prob=0.0):
+        '''
+        Args:
+            file_name (str)
+            randomize (bool): If true, chooses a random agent location and goal location.
+            num_goals (int)
+            name (str)
+
+        Returns:
+            (GridWorldMDP)
+
+        Summary:
+            Builds a GridWorldMDP from a file:
+                'w' --> wall
+                'a' --> agent
+                'g' --> goal
+                'l' --> lava
+                '-' --> empty
+        '''
         
+# agents =[ {"x":1, "y":1, "has_passenger":0}, {"x":1, "y":2, "has_passenger":0}, {"x":2, "y":2, "has_passenger":0}, {"x":3, "y":2, "has_passenger":0}, {"x":3, "y":3, "has_passenger":0}]
+#         passengers = [{"x":4, "y":3, "dest_x":2, "dest_y":2, "in_taxi":0}]
+#         walls = []
+#         # taxi_mdp = TaxiOOMDP(5, 5, agent_loc=agent, walls=walls, passengers=passengers)
+#         self.mdps = [TaxiOOMDP(5, 5, agent=a, walls=walls, passengers=passengers) for a in agents]
+
+    #     agent = {"x":1, "y":1, "has_passenger":0}
+    # passengers = [{"x":8, "y":4, "dest_x":2, "dest_y":2, "in_taxi":0}]
+    # taxi_world = TaxiOOMDP(10, 10, agent=agent, walls=[], passengers=passengers)
+
+        # if name is None:
+        #     name = file_name.split(".")[0]
+
+        # grid_path = os.path.dirname(os.path.realpath(__file__))
+        wall_file = open(file_name)
+        wall_lines = wall_file.readlines()
+
+        # Get walls, agent, goal loc.
+        num_rows = len(wall_lines)
+        num_cols = len(wall_lines[0].strip())
+        empty_cells = []
+        agent_x, agent_y = 1, 1
+        walls = []
+        goal_locs = []
+        passenger_locs = []
+
+        for i, line in enumerate(wall_lines):
+            line = line.strip()
+            for j, ch in enumerate(line):
+                if ch == "w":
+                    walls.append((j + 1, num_rows - i))
+                elif ch == "g":
+                    goal_locs.append((j + 1, num_rows - i))
+                elif ch == "p":
+                    passenger_locs.append((j + 1, num_rows - i))
+                elif ch == "a":
+                    agent_x, agent_y = j + 1, num_rows - i
+                elif ch == "-":
+                    empty_cells.append((j + 1, num_rows - i))
+
+        if goal_num is not None:
+            goal_locs = [goal_locs[goal_num % len(goal_locs)]]
+
+        # if randomize:
+        #     agent_x, agent_y = random.choice(empty_cells)
+        #     if len(goal_locs) == 0:
+        #         # Sample @num_goals random goal locations.
+        #         goal_locs = random.sample(empty_cells, num_goals)
+        #     else:
+        #         goal_locs = random.sample(goal_locs, num_goals)
+
+        if len(goal_locs) == 0:
+            goal_locs = [(num_cols, num_rows)]
+
+        # return GridWorldMDP(width=num_cols, height=num_rows, init_loc=(agent_x, agent_y), goal_locs=goal_locs, lava_locs=lava_locs, walls=walls, name=name, slip_prob=slip_prob)
+        return TaxiOOMDP(width=num_cols, height=num_rows, agent={"x":agent_x, "y":agent_y, "has_passenger":0}, walls=walls, passengers=[{"x":passenger_locs[0][0], "y":passenger_locs[0][1], "dest_x":goal_locs[0][0], "dest_y":goal_locs[0][1], "in_taxi":0}])
+
+            

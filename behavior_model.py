@@ -6,7 +6,7 @@ from tensorflow.keras.layers import Embedding, Dense
 import numpy as np
 from tensorflow.keras.optimizers import Adam
 import keras
-
+from AE import AE
 
 
 class BehaviorModel:
@@ -33,6 +33,9 @@ class BehaviorModel:
     def _sent_to_list(self):
         return self.training_data.split(';')
     
+   
+        
+   # Formats data and trains the model     
     def train(self):
         # PV-DBOW (Distributed Bag of Words version of Paragraph Vector): In this approach, the 
         # model predicts words independently based solely on the document vector. It treats each 
@@ -48,7 +51,7 @@ class BehaviorModel:
         # Parameters
         vector_size = 3       # Dimension of word vectors and document vectors
         window_size = 2         # Context window size
-        epochs = 1#00        # Number of training epochs
+        epochs = 100        # Number of training epochs
         batch_size = 1          # Batch size (for simplicity, we'll train one document at a time)
 
         # Generate training data (context words and document labels)
@@ -67,33 +70,34 @@ class BehaviorModel:
                 for target_word in context:
                     training_data.append((doc_id, word, target_word))
 
-                # Convert words to indices
+        # Convert words to indices
         X_train = np.array([doc_id for doc_id, _, _ in training_data])    # Document ID as input
         y_train = np.array([word2index[target_word] for _, _, target_word in training_data])  # Context word as target
 
-        # Define the model architecture
-        self.model = Sequential()
+        self.encoder = AE( X_train, y_train, epochs, batch_size, vector_size, vocab_size, self.model_save_file, self.processed_data)
+        # # Define the model architecture
+        # self.model = Sequential()
 
 
-        # Input layer: Document vectors
-        self.model.add(Embedding(input_dim=len(self.processed_data), output_dim=vector_size, name="doc_embedding"))
+        # # Input layer: Document vectors
+        # self.model.add(Embedding(input_dim=len(self.processed_data), output_dim=vector_size, name="doc_embedding"))
 
-        # Output layer: Prediction of context word using softmax
-        self.model.add(Dense(vocab_size, activation='softmax'))
+        # # Output layer: Prediction of context word using softmax
+        # self.model.add(Dense(vocab_size, activation='softmax'))
     
 
-        # Compile the model
-        self.model.compile(loss='sparse_categorical_crossentropy', optimizer=Adam(), metrics=['accuracy'])
+        # # Compile the model
+        # self.model.compile(loss='sparse_categorical_crossentropy', optimizer=Adam(), metrics=['accuracy'])
 
-        # Train the model
-        self.model.fit(X_train, y_train, epochs=epochs, batch_size=batch_size)
+        # # Train the model
+        # self.model.fit(X_train, y_train, epochs=epochs, batch_size=batch_size)
 
-        # After training, we can extract the document and word embeddings
-        doc_embedding_layer = self.model.get_layer('doc_embedding')
+        # # After training, we can extract the document and word embeddings
+        # doc_embedding_layer = self.model.get_layer('doc_embedding')
 
-        # Extract document vectors
-        self.doc_vectors = doc_embedding_layer.get_weights()[0]  
+        # # Extract document vectors
+        # self.doc_vectors = doc_embedding_layer.get_weights()[0]  
 
-        # Save the model so we can retrive it later
-        self.model.save(self.model_save_file)
+        # # Save the model so we can retrive it later
+        # self.model.save(self.model_save_file)
         
