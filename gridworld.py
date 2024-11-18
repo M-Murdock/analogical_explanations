@@ -32,7 +32,7 @@ def main():
     # state_action_reward_embedding_space.new_model()
     # state_action_reward_embedding_space.load_model()
     
-    # state_reward_embedding_space = GridWorldEmbeddingSpace(NUM_TRAJECTORIES=100, N_GRAM_TYPE="state-reward")
+    # state_reward_embedding_space = EmbeddingSpace(NUM_TRAJECTORIES=100, N_GRAM_TYPE="state-reward")
     # state_reward_embedding_space.new_model()
     # state_reward_embedding_space.load_model()
     
