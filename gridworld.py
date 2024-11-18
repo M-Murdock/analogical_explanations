@@ -12,35 +12,12 @@ def main():
     # STEP 2: Create embeddings of the trajectories (using whatever technique)
     # Options for n-gram type include: "state-action", "action-reward", "states", "actions", "state-action-reward", "state-reward"
     
-    # state_action_embedding_space = GridWorldEmbeddingSpace(N_GRAM_TYPE="state-action")
-    # state_action_embedding_space.new_model()
-    # state_action_embedding_space.load_model()
-    
-    # action_reward_embedding_space = GridWorldEmbeddingSpace(NUM_TRAJECTORIES=100, N_GRAM_TYPE="action-reward")
-    # action_reward_embedding_space.new_model()
-    # action_reward_embedding_space.load_model()
-    
-    # states_embedding_space = GridWorldEmbeddingSpace(N_GRAM_TYPE="states")
-    # states_embedding_space.new_model()
-    # states_embedding_space.load_model()
-    
-    actions_embedding_space = GridWorldEmbeddingSpace(N_GRAM_TYPE="actions")
-    actions_embedding_space.new_model()
-    # actions_embedding_space.load_model()
-    
-    # state_action_reward_embedding_space = GridWorldEmbeddingSpace(N_GRAM_TYPE="state-action-reward")
-    # state_action_reward_embedding_space.new_model()
-    # state_action_reward_embedding_space.load_model()
-    
-    # state_reward_embedding_space = EmbeddingSpace(NUM_TRAJECTORIES=100, N_GRAM_TYPE="state-reward")
-    # state_reward_embedding_space.new_model()
-    # state_reward_embedding_space.load_model()
-    
-    
+    embedding_space = GridWorldEmbeddingSpace(N_GRAM_TYPE="actions", load_agents=True)
+    embedding_space.new_model()
     # embedding_space.load_model()
     # -------------------------
     
-    InteractivePlotABCD(actions_embedding_space)
+    InteractivePlotABCD(embedding_space)
     # -------------------------
     # -----------------------
     

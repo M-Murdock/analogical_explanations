@@ -7,15 +7,17 @@ import os
 from Agents import Agents
 
 class GridWorldEmbeddingSpace:
-    def __init__(self, N_GRAM_TYPE="state-action", MAP_DIRECTORY="maps/"):
+    def __init__(self, load_agents=True, N_GRAM_TYPE="state-action", MAP_DIRECTORY="maps/"):
         
         self.N_GRAM_TYPE = N_GRAM_TYPE
         self.n_gram_file = "n-grams/" + N_GRAM_TYPE + "-n-grams.txt"
         self.MAP_DIRECTORY = MAP_DIRECTORY
         self.model_save_file = "keras/" + N_GRAM_TYPE + "-model.keras"
 
-        # self.train_agents() # uncomment this to re-learn our mdps
-        self.load_agents()
+        if load_agents:
+            self.load_agents()
+        else:
+            self.train_agents() 
         
         self._traj_to_sentences()
         self._states_to_coord()
@@ -23,10 +25,8 @@ class GridWorldEmbeddingSpace:
         
     def new_model(self):
         self.ae = AE(self.n_gram_file, self.model_save_file)
-        print("CREATEd")
         self.ae.process_data()
         self.ae.train()
-        print("TRAINED")
         self.vectors = self.ae.doc_vectors
         
     def load_model(self):
@@ -36,28 +36,7 @@ class GridWorldEmbeddingSpace:
     # ----------------------------------------------------------------
     # ----------------------------------------------------------------
     # Utilities
-    # ---------------------------------------------------------------- 
-    
-    # Generate trajectories --> convert to sentences --> train model
-    
-    # Generate trajectories    
-    def train_agents(self, episodes=100, steps=200, slip_prob=0.1):
-        # create MDPs for each possible trajectory (i.e. from every possible start position)
-        self.mdps = [GridWorldMDPClass.make_grid_world_from_file(os.path.join(self.MAP_DIRECTORY, path), num_goals=1, name=None, slip_prob=slip_prob) for path in os.listdir(self.MAP_DIRECTORY)]
-        
-        # create Q-learning agents for each trajectory
-        self.q_learning_agents = [QLearningAgent(actions=self.mdps[i].get_actions() ) for i in range(0, len(self.mdps))]
-        
-        # train the agents
-        self.agents = Agents()
-        self.optimal_trajectories, self.optimal_rewards = self.agents.train_agents(self.mdps, self.q_learning_agents, episodes, steps)
-        self.NUM_TRAJECTORIES = len(self.optimal_trajectories)
-    
-    def load_agents(self):
-        self.agents = Agents()
-        self.optimal_trajectories, self.optimal_rewards = self.agents.load_agents()
-        self.NUM_TRAJECTORIES = len(self.optimal_trajectories)
-        
+    # ----------------------------------------------------------------   
     # Convert to sentences
     def _traj_to_sentences(self):
         self.state_sequences = [] 
@@ -144,4 +123,27 @@ class GridWorldEmbeddingSpace:
             index = indices[i]
             
         return index
+    
+    
+    # ----------------------------------------------------------------
+    # ----------------------------------------------------------------
+    # Save/Load trained agents
+    # ----------------------------------------------------------------   
+    def train_agents(self, episodes=100, steps=200, slip_prob=0.1):
+        # create MDPs for each possible trajectory (i.e. from every possible start position)
+        self.mdps = [GridWorldMDPClass.make_grid_world_from_file(os.path.join(self.MAP_DIRECTORY, path), num_goals=1, name=None, slip_prob=slip_prob) for path in os.listdir(self.MAP_DIRECTORY)]
+        
+        # create Q-learning agents for each trajectory
+        self.q_learning_agents = [QLearningAgent(actions=self.mdps[i].get_actions() ) for i in range(0, len(self.mdps))]
+        
+        # train the agents
+        self.agents = Agents()
+        self.optimal_trajectories, self.optimal_rewards = self.agents.train_agents(self.mdps, self.q_learning_agents, episodes, steps)
+        self.NUM_TRAJECTORIES = len(self.optimal_trajectories)
+    
+    def load_agents(self):
+        self.agents = Agents()
+        self.optimal_trajectories, self.optimal_rewards = self.agents.load_agents()
+        self.NUM_TRAJECTORIES = len(self.optimal_trajectories)
+
         

@@ -53,7 +53,6 @@ class Agents:
 
         # ----------------------------------------------------------------
         # Get the optimal trajectory and rewards
-        print("getting optimal trajectory")
         self.trajectory = [] 
         self.rewards = []
         state = mdp.get_init_state()
