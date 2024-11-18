@@ -65,7 +65,7 @@ class Agents:
             if state.is_terminal():
                 break
 
-            # Execute in MDP.
+            # Execute in MDP
             _, next_state = mdp.execute_agent_action(action)
 
             self.trajectory.append((state, action))

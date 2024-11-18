@@ -7,8 +7,8 @@ Any modifiations are made by the AABL Lab.
 
 import torch.nn as nn
 import torch.optim as optim
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Embedding, Dense
+from tensorflow.keras.models import Sequential, Model
+from tensorflow.keras.layers import Embedding, Dense, Input, Reshape, Flatten
 from tensorflow.keras.optimizers import Adam
 import pickle
 from collections import Counter
@@ -24,11 +24,8 @@ class AE(nn.Module):
         self.model_save_file = model_save_file
         
         with open(training_file, "rb") as fp:   
-            self.training_data = pickle.load(fp)
+            self.processed_data = pickle.load(fp)
         
-        # convert document to lists of sentences
-        self.documents = self._sent_to_list()
-        self.processed_data = [self._preprocess(doc) for doc in self.documents]
         
         # Parameters
         self.vector_size = 3       # Dimension of word vectors and document vectors
@@ -36,10 +33,7 @@ class AE(nn.Module):
         self.epochs = 100        # Number of training epochs
         self.batch_size = 1          # Batch size (for simplicity, we'll train one document at a time)
         
-        # self.processed_data = [] 
-        # self.vocab_size = 0
-        # with open(self.model_save_file, "rb") as fp:   
-        #     self.training_data = pickle.load(training_file)
+
             
     def process_data(self):
         # Build vocabulary
@@ -70,13 +64,7 @@ class AE(nn.Module):
         # Convert words to indices
         self.X_train = np.array([doc_id for doc_id, _, _ in self.training_data])    # Document ID as input
         self.Y_train = np.array([word2index[target_word] for _, _, target_word in self.training_data])  # Context word as target
-        
-    def _preprocess(self, doc):
-        words = doc.split(" ")
-        return words
-        
-    def _sent_to_list(self):
-        return self.training_data.split(';')
+
             
     def train(self):
         # Define the model architecture
@@ -92,16 +80,15 @@ class AE(nn.Module):
         # Compile the model
         self.model.compile(loss='sparse_categorical_crossentropy', optimizer=Adam(), metrics=['accuracy'])
 
-        # Train the model
+        # # Train the model
         self.model.fit(self.X_train, self.Y_train, epochs=self.epochs, batch_size=self.batch_size)
 
-        # After training, we can extract the document and word embeddings
+        # # After training, we can extract the document and word embeddings
         doc_embedding_layer = self.model.get_layer('doc_embedding')
-
         # Extract document vectors
         self.doc_vectors = doc_embedding_layer.get_weights()[0]  
 
-        # Save the model so we can retrive it later
+        # Save the model so we can retrieve it later
         self.model.save(self.model_save_file)
         
     def load(self):

@@ -54,9 +54,12 @@ class GridWorldEmbeddingSpace:
             a_sequence = [t[1] for t in traj]   
             self.actions_sequences.append(a_sequence)
             self.state_sequences.append(temp_state)   
-        contents = ""
+        # contents = ""
+        sentences = []
         
         for traj_num in range(0, len(self.state_sequences)): # go through each trajectory
+            
+            contents = ""
             for i in range(0, len(self.actions_sequences[traj_num])):
                 # ----------------------------------------------------------------
                 if self.N_GRAM_TYPE == "state-action":
@@ -83,11 +86,12 @@ class GridWorldEmbeddingSpace:
                     # save state-action-reward to the file
                     contents += " " + self.state_sequences[traj_num][i] + "" + self.state_sequences[traj_num][i] + str(self.rewards[traj_num][i]) 
                 # ----------------------------------------------------------------  
-            contents += ";"
+            # contents += ";"
+            sentences.append(contents.split(" "))
 
         # save the new representation to a file
         with open(self.n_gram_file, "wb") as fp:
-            pickle.dump(contents, fp)
+            pickle.dump(sentences, fp)
             
 
 
@@ -111,16 +115,16 @@ class GridWorldEmbeddingSpace:
         D_estimate = C + diff_vector
 
         
-        # find the vector closest to D_estimate
+        # find the point closest to D_estimate
         tree = spatial.KDTree(self.vectors)
         dist, indices = tree.query(D_estimate, k=4) 
         
         index = 0
         # make sure that the vector closest to D_estimate is not the original vectors A, B, or C
         for i in range(0,3):
-            if not (self.vectors[indices[i]].all() == A.all() or self.vectors[indices[i]].all() == B.all() or self.vectors[indices[i]].all() == C.all()):
-                break
             index = indices[i]
+            if not (self.vectors[index].all() == A.all() or self.vectors[index].all() == B.all() or self.vectors[index].all() == C.all()):
+                break
             
         return index
     

@@ -12,7 +12,7 @@ def main():
     # STEP 2: Create embeddings of the trajectories (using whatever technique)
     # Options for n-gram type include: "state-action", "action-reward", "states", "actions", "state-action-reward", "state-reward"
     
-    embedding_space = GridWorldEmbeddingSpace(N_GRAM_TYPE="actions", load_agents=True)
+    embedding_space = GridWorldEmbeddingSpace(N_GRAM_TYPE="state-action", load_agents=True)
     embedding_space.new_model()
     # embedding_space.load_model()
     # -------------------------
