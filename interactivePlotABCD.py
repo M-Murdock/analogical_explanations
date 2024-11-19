@@ -1,6 +1,6 @@
 # Reference: https://community.plotly.com/t/using-one-slider-to-control-multiple-subplots-not-multiple-traces/13955/4
 
-from matplotlib.widgets import Slider, Button, RadioButtons
+from matplotlib.widgets import Slider, Button, RadioButtons, CheckButtons
 import matplotlib.pyplot as plt
 
 class InteractivePlotABCD:
@@ -24,8 +24,8 @@ class InteractivePlotABCD:
         
         # make the graphs
         self.fig = plt.figure(constrained_layout=True, figsize=(12, 10))
-        widths = [20, 20, 1, 1, 1, 1, 1, 1, 1]
-        heights = [20, 5, 2, 2, 5, 2, 5, 5, 1]
+        widths = [20, 20, 1, 1, 1, 2, 1, 1, 1]
+        heights = [20, 5, 2, 2, 5, 10, 5, 5, 1]
         spec = self.fig.add_gridspec(ncols=9, nrows=9, width_ratios=widths, height_ratios=heights)
         
         self.parallelogram_axis = self.fig.add_subplot(spec[0, 0], projection='3d')
@@ -45,6 +45,8 @@ class InteractivePlotABCD:
         self.D_axis = self.fig.add_subplot(spec[3, 1])
         
         self.radio_axis = self.fig.add_subplot(spec[4, 0])
+        
+        self.checkbox_axis = self.fig.add_subplot(spec[5,0])
         
         
         # create slider A
@@ -88,9 +90,13 @@ class InteractivePlotABCD:
         self.infer_button.on_clicked(self.infer)
 
         # create radio buttons
-        self.radio_button = RadioButtons(self.radio_axis, ["Inference Mode", "Free Play Mode"], active=0) 
-        self.radio_button.on_clicked(self.mode_selection)
+        self.radio_buttons = RadioButtons(self.radio_axis, ["Inference Mode", "Free Play Mode"], active=0) 
+        self.radio_buttons.on_clicked(self.mode_selection)
         
+        # create checkboxes to hide/show ABCD  
+        self.checkbox_buttons = CheckButtons(self.checkbox_axis, labels=['A', 'B', 'C', 'D'], actives=[True, True, True, True])
+        self.checkbox_buttons.on_clicked(self.checkbox_changed)
+
         # begin in inference mode
         self.mode_selection("Inference Mode")
         
@@ -132,18 +138,15 @@ class InteractivePlotABCD:
     # plot each trajectory A, B, C, and D on the same graph
     def visualize_trajectory(self):
         
+        visible_points = [self.checkbox_buttons.lines[0][0].get_visible(), self.checkbox_buttons.lines[1][0].get_visible(), self.checkbox_buttons.lines[2][0].get_visible(), self.checkbox_buttons.lines[3][0].get_visible()]
         if self.mode == "Inference Mode" and self.inference_requested == False: # if we don't yet have a value for D
-            num_points = 3
-        else: # otherwise, plot D
-            num_points = 4
-            
-        # based on the indices for A, B, C,and D 
-        for e in range(0, num_points):
-            
-            self.trajectory_axis.plot(self.all_of_x[self.embedding_indices[e]], self.all_of_y[self.embedding_indices[e]], color=self.abcd_colors[e], linewidth=1, linestyle='--')
-            # indicate the start positions with colored dots
-            self.trajectory_axis.scatter(self.all_of_x[self.embedding_indices[e]][0],self.all_of_y[self.embedding_indices[e]][0], color=self.abcd_colors[e], s=100)
+            visible_points[3] = False
         
+        for e in range(0, len(self.embedding_indices)):
+            if visible_points[e] == True:
+                self.trajectory_axis.plot(self.all_of_x[self.embedding_indices[e]], self.all_of_y[self.embedding_indices[e]], color=self.abcd_colors[e], linewidth=1, linestyle='--')
+                # indicate the start positions with colored dots
+                self.trajectory_axis.scatter(self.all_of_x[self.embedding_indices[e]][0],self.all_of_y[self.embedding_indices[e]][0], color=self.abcd_colors[e], s=100)
         
         self.trajectory_axis.set_yticklabels([])
         self.trajectory_axis.set_xticklabels([])
@@ -182,6 +185,7 @@ class InteractivePlotABCD:
         self.B_slider.reset()
         self.C_slider.reset()  
         self.D_slider.reset()
+        self.activate_checkboxes()
         self.plot_embeddings()
         self.visualize_trajectory()
         
@@ -214,5 +218,19 @@ class InteractivePlotABCD:
             self.D_axis.set_visible(True)
             self.infer_axis.set_visible(False)
 
+    def activate_checkboxes(self):
+        if not self.checkbox_buttons.lines[0][0].get_visible():
+            self.checkbox_buttons.set_active(0)
+        if not self.checkbox_buttons.lines[1][0].get_visible():
+            self.checkbox_buttons.set_active(1)
+        if not self.checkbox_buttons.lines[2][0].get_visible():
+            self.checkbox_buttons.set_active(2)
+        if not self.checkbox_buttons.lines[3][0].get_visible():
+            self.checkbox_buttons.set_active(3)
+        
+    def checkbox_changed(self, event):
+        self.update(None)
+        self.visualize_trajectory()
+        
         
         
