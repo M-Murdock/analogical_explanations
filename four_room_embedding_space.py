@@ -7,11 +7,10 @@ from scipy import spatial
 import os
 from Agents import Agents
 
-class GridWorldEmbeddingSpace:
-    def __init__(self, load_agents=True, TASK="gridworld", N_GRAM_TYPE="state-action", MAP_DIRECTORY="maps/"):
+class FourRoomEmbeddingSpace:
+    def __init__(self, load_agents=True, N_GRAM_TYPE="state-action", MAP_DIRECTORY="maps/"):
         
         self.N_GRAM_TYPE = N_GRAM_TYPE
-        self.TASK = TASK
         self.n_gram_file = "n-grams/" + N_GRAM_TYPE + "-n-grams.txt"
         self.MAP_DIRECTORY = MAP_DIRECTORY
         self.model_save_file = "keras/" + N_GRAM_TYPE + "-model.keras"
@@ -139,18 +138,26 @@ class GridWorldEmbeddingSpace:
     # Save/Load trained agents
     # ----------------------------------------------------------------   
     def train_agents(self, episodes=100, steps=200, slip_prob=0.1):
-        # create MDPs for each possible trajectory (i.e. from every possible start position)
-        if self.TASK == "gridworld":
-            self.mdps = [GridWorldMDPClass.make_grid_world_from_file(os.path.join(self.MAP_DIRECTORY, path), num_goals=1, name=None, slip_prob=slip_prob) for path in os.listdir(self.MAP_DIRECTORY)]
-        elif self.TASK == "four_room":
-            self.mdps = [FourRoomMDP(9, 9, init_loc=(1,i), goal_locs=[(0,0)]) for i in range(0,5)]
-            
+        # # create MDPs for each possible trajectory (i.e. from every possible start position)
+        # self.mdps = [GridWorldMDPClass.make_grid_world_from_file(os.path.join(self.MAP_DIRECTORY, path), num_goals=1, name=None, slip_prob=slip_prob) for path in os.listdir(self.MAP_DIRECTORY)]
+        
+        # # create Q-learning agents for each trajectory
+        # self.q_learning_agents = [QLearningAgent(actions=self.mdps[i].get_actions() ) for i in range(0, len(self.mdps))]
+        # # train the agents
+        # self.agents = Agents()
+        # self.optimal_trajectories, self.optimal_rewards = self.agents.train_agents(self.mdps, self.q_learning_agents, episodes, steps)
+
+        # self.NUM_TRAJECTORIES = len(self.optimal_trajectories)
+        self.mdps = [FourRoomMDP(9, 9, init_loc=(1,i), goal_locs=[(0,0)]) for i in range(0,5)]
+        
         # create Q-learning agents for each trajectory
-        self.q_learning_agents = [QLearningAgent(actions=self.mdps[i].get_actions() ) for i in range(0, len(self.mdps))]
+        # self.q_learning_agents = [QLearningAgent(actions=self.mdps[i].get_actions() ) for i in range(0, len(self.mdps))]
+        self.q_learning_agents = [QLearningAgent(actions=mdp.get_actions()) for mdp in self.mdps]
         # train the agents
         self.agents = Agents()
+        print("About to train agents")
         self.optimal_trajectories, self.optimal_rewards = self.agents.train_agents(self.mdps, self.q_learning_agents, episodes, steps)
-
+        print("Training complete")
         self.NUM_TRAJECTORIES = len(self.optimal_trajectories)
     
     def load_agents(self):

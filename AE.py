@@ -6,14 +6,15 @@ Any modifiations are made by the AABL Lab.
 """
 
 import torch.nn as nn
-import torch.optim as optim
-from tensorflow.keras.models import Sequential, Model
-from tensorflow.keras.layers import Embedding, Dense, Input, Reshape, Flatten
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Embedding, Dense
 from tensorflow.keras.optimizers import Adam
 import pickle
 from collections import Counter
 import numpy as np
 import keras
+
+
 
 class AE(nn.Module):
 
@@ -33,8 +34,7 @@ class AE(nn.Module):
         self.epochs = 100        # Number of training epochs
         self.batch_size = 1          # Batch size (for simplicity, we'll train one document at a time)
         
-
-            
+    
     def process_data(self):
         # Build vocabulary
         all_words = [word for doc in self.processed_data for word in doc]
@@ -47,7 +47,7 @@ class AE(nn.Module):
 
         # Generate training data (context words and document labels)
         self.training_data = []
-
+ 
         for doc_id, doc in enumerate(self.processed_data):
             for i, word in enumerate(doc):
                 # Define the context window for the word
@@ -64,22 +64,22 @@ class AE(nn.Module):
         # Convert words to indices
         self.X_train = np.array([doc_id for doc_id, _, _ in self.training_data])    # Document ID as input
         self.Y_train = np.array([word2index[target_word] for _, _, target_word in self.training_data])  # Context word as target
+        
 
-            
     def train(self):
         # Define the model architecture
         self.model = Sequential()
 
-        # Input layer: Document vectors
+        # Input layer: list of document (i.e. trajectory) vectors
         self.model.add(Embedding(input_dim=len(self.processed_data), output_dim=self.vector_size, name="doc_embedding"))
+        # self.model.add(Embedding(input_dim=len(self.processed_data), output_dim=2, name="doc_embedding"))
 
+        # self.model.add(Flatten())
         # Output layer: Prediction of context word using softmax
-        self.model.add(Dense(self.vocab_size, activation='softmax'))
+        self.model.add(Dense(self.vocab_size, activation='sigmoid'))
     
-
         # Compile the model
         self.model.compile(loss='sparse_categorical_crossentropy', optimizer=Adam(), metrics=['accuracy'])
-
         # # Train the model
         self.model.fit(self.X_train, self.Y_train, epochs=self.epochs, batch_size=self.batch_size)
 

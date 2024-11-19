@@ -1,6 +1,6 @@
 import pickle 
 
-class Agents:
+class TaxiAgents:
     def __init__(self, traj_filename="optimal_agents/optimal_trajs", rewards_filename="optimal_agents/optimal_rewards"):
         self.traj_filename = traj_filename
         self.rewards_filename = rewards_filename
@@ -28,6 +28,7 @@ class Agents:
         # ----------------------------------------------------------------
         # Train the agent
         for _ in range(1, episodes + 1):
+            print("training")
             state = mdp.get_init_state()
             reward = 0
             
@@ -50,15 +51,14 @@ class Agents:
                 
             mdp.reset()
             agent.end_of_episode()
-        print("PARTLY TRAINED")
+
         # ----------------------------------------------------------------
         # Get the optimal trajectory and rewards
         self.trajectory = [] 
         self.rewards = []
         state = mdp.get_init_state()
-        i = 0
-        while (not state.is_terminal()) and (i <= steps):
-            print("RUNNING ", i)
+
+        while not state.is_terminal():
             # Compute the agent's policy.
             action = agent.act(state, None, learning=False)
 
@@ -74,11 +74,11 @@ class Agents:
 
             # Update pointer.
             state = next_state
-            i += 1
+
         # Reset the MDP, tell the agent the episode is over.
         mdp.reset()
         agent.end_of_episode()
-        print("FULLY TRAINED")
+        
         return self.trajectory, self.rewards
     
     def load_agents(self):
