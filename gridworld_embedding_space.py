@@ -12,9 +12,12 @@ class GridWorldEmbeddingSpace:
         
         self.N_GRAM_TYPE = N_GRAM_TYPE
         self.TASK = TASK
-        self.n_gram_file = "n-grams/" + N_GRAM_TYPE + "-n-grams.txt"
         self.MAP_DIRECTORY = MAP_DIRECTORY
-        self.model_save_file = "keras/" + N_GRAM_TYPE + "-model.keras"
+        
+        self.n_gram_file = "n-grams/" + N_GRAM_TYPE + "-n-grams-" + TASK + ".txt"
+        self.model_save_file = "keras/" + N_GRAM_TYPE + "-model-" + TASK + ".keras"
+        self.traj_filename="optimal_agents/optimal_trajs-" + self.TASK + ""
+        self.rewards_filename="optimal_agents/optimal_rewards-" + self.TASK + ""
 
         if load_agents:
             self.load_agents()
@@ -27,11 +30,8 @@ class GridWorldEmbeddingSpace:
         
     def new_model(self):
         self.ae = AE(self.n_gram_file, self.model_save_file)
-        print("created")
         self.ae.process_data()
-        print("processed")
         self.ae.train()
-        print("trained")
         self.vectors = self.ae.doc_vectors
         
     def load_model(self):
@@ -65,6 +65,7 @@ class GridWorldEmbeddingSpace:
         for traj_num in range(0, len(self.state_sequences)): # go through each trajectory
             
             contents = ""
+            chunk_size = 5
             for i in range(0, len(self.actions_sequences[traj_num])):
                 # ----------------------------------------------------------------
                 if self.N_GRAM_TYPE == "state-action":
@@ -91,6 +92,12 @@ class GridWorldEmbeddingSpace:
                     # save state-action-reward to the file
                     contents += " " + self.state_sequences[traj_num][i] + "" + self.state_sequences[traj_num][i] + str(self.rewards[traj_num][i]) 
                 # ----------------------------------------------------------------  
+                if self.N_GRAM_TYPE == "state-action-chunks":
+                    # save state-action pairs to the file
+                    contents += self.state_sequences[traj_num][i] + "" + self.actions_sequences[traj_num][i]
+                    if i % chunk_size == 0:
+                        contents += " "
+                # ----------------------------------------------------------------     
             # contents += ";"
             sentences.append(contents.split(" "))
 
@@ -143,18 +150,24 @@ class GridWorldEmbeddingSpace:
         if self.TASK == "gridworld":
             self.mdps = [GridWorldMDPClass.make_grid_world_from_file(os.path.join(self.MAP_DIRECTORY, path), num_goals=1, name=None, slip_prob=slip_prob) for path in os.listdir(self.MAP_DIRECTORY)]
         elif self.TASK == "four_room":
-            self.mdps = [FourRoomMDP(9, 9, init_loc=(1,i), goal_locs=[(0,0)]) for i in range(0,5)]
+            # self.mdps = [FourRoomMDP(9, 9, init_loc=(1,i), goal_locs=[(0,0)]) for i in range(0,9)]
+            self.mdps = []
+            for i in range(0,8):
+                for j in range(0,8):
+                    self.mdps.append(FourRoomMDP(9, 9, init_loc=(i,j), goal_locs=[(0,0)]))
+            # self.mdps = [FourRoomMDP(9, 9, init_loc=(i,j), goal_locs=[(0,0)]) for i in range(0,8) j in range(0,8)]
             
         # create Q-learning agents for each trajectory
         self.q_learning_agents = [QLearningAgent(actions=self.mdps[i].get_actions() ) for i in range(0, len(self.mdps))]
+        
         # train the agents
-        self.agents = Agents()
+        self.agents = Agents(traj_filename=self.traj_filename, rewards_filename=self.rewards_filename)
         self.optimal_trajectories, self.optimal_rewards = self.agents.train_agents(self.mdps, self.q_learning_agents, episodes, steps)
 
         self.NUM_TRAJECTORIES = len(self.optimal_trajectories)
     
     def load_agents(self):
-        self.agents = Agents()
+        self.agents = Agents(traj_filename=self.traj_filename, rewards_filename=self.rewards_filename)
         self.optimal_trajectories, self.optimal_rewards = self.agents.load_agents()
         self.NUM_TRAJECTORIES = len(self.optimal_trajectories)
 

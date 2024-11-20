@@ -50,7 +50,6 @@ class Agents:
                 
             mdp.reset()
             agent.end_of_episode()
-        print("PARTLY TRAINED")
         # ----------------------------------------------------------------
         # Get the optimal trajectory and rewards
         self.trajectory = [] 
@@ -58,7 +57,6 @@ class Agents:
         state = mdp.get_init_state()
         i = 0
         while (not state.is_terminal()) and (i <= steps):
-            print("RUNNING ", i)
             # Compute the agent's policy.
             action = agent.act(state, None, learning=False)
 
@@ -78,7 +76,6 @@ class Agents:
         # Reset the MDP, tell the agent the episode is over.
         mdp.reset()
         agent.end_of_episode()
-        print("FULLY TRAINED")
         return self.trajectory, self.rewards
     
     def load_agents(self):
