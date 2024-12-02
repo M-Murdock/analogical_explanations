@@ -13,7 +13,7 @@ class InteractivePlotABCD:
         
         self.abcd_colors = abcd_colors
 
-        self.mode = "Inference Mode" # the mode currently selected by the user
+        self.mode = "Free Play Mode" # the mode currently selected by the user
         self.inference_requested = False # whether or not the "infer" button has been clicked (while in "inference mode")
         # create list of all the optimal trajectories (so we only have to do it once)
         self._generate_visual_trajectories()
@@ -97,8 +97,8 @@ class InteractivePlotABCD:
         self.checkbox_buttons = CheckButtons(self.checkbox_axis, labels=['A', 'B', 'C', 'D'], actives=[True, True, True, True])
         self.checkbox_buttons.on_clicked(self.checkbox_changed)
 
-        # begin in inference mode
-        self.mode_selection("Inference Mode")
+        # begin in free play mode
+        self.mode_selection("Free Play Mode")
         
         # plot our data
         self.plot_embeddings()

@@ -47,7 +47,7 @@ class AE(nn.Module):
 
         # Generate training data (context words and document labels)
         self.training_data = []
- 
+
         for doc_id, doc in enumerate(self.processed_data):
             for i, word in enumerate(doc):
                 # Define the context window for the word
