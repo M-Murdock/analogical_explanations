@@ -90,7 +90,7 @@ class InteractivePlotABCD:
         self.infer_button.on_clicked(self.infer)
 
         # create radio buttons
-        self.radio_buttons = RadioButtons(self.radio_axis, ["Inference Mode", "Free Play Mode"], active=0) 
+        self.radio_buttons = RadioButtons(self.radio_axis, ["Inference Mode", "Free Play Mode"], active=1) 
         self.radio_buttons.on_clicked(self.mode_selection)
         
         # create checkboxes to hide/show ABCD  

@@ -15,21 +15,24 @@ def main():
     
     s = [("Trajectory " + str(i) + " states:" + state_sequences[i]) for i in range(0, len(state_sequences))]
     s_str = ','.join(s)
-    # print(s_str)
-    
+
     a = [("Trajectory " + str(i) + " actions:" + actions_sequences[i]) for i in range(0, len(actions_sequences))]
     a_str = ','.join(a)
     
     r = [("Trajectory " + str(i) + " rewards:" + rewards_sequences[i]) for i in range(0, len(rewards_sequences))]
     r_str = ','.join(r)
 
-    traj1 = 53
-    traj2 = 59
-    prompt = "Here are a series of state, action, and reward sequences for several trajectories. Give me the indices of two trajectories which share the same relationship with each other as trajectories " + str(traj1) + " and " + str(traj2) + "." 
+    traj1 = 23
+    traj2 = 17
+    prompt = "Here are a series of state, action, and reward sequences for several trajectories."
+    prompt += "Give me the indices of two trajectories who share the same relationship with each other as the trajectories " + str(traj1) + " and " + str(traj2) + " share with each other." 
     prompt += "These cannot be trajectories" + str(traj1) + " and " + str(traj2) + "."
+    # prompt += "These trajectories form an analogy. In the analogy form A:B :: C:D, " + str(traj1) + " and " + str(traj2) + " are A and B, respectfully."
+    prompt += "All trajectories end in the same state, so when comparing them, ignore the last few states."
     prompt += s_str + ", "
     prompt += a_str + ", "
     prompt += r_str
+
     # ----------------------------------------------------------------
     
     genai.configure(api_key='AIzaSyDRxCLCKF95i2leizDmc5K23sxm4MWmqNc')
