@@ -18,7 +18,7 @@ def main():
     for trajectory in data:
         traj_x.append([int(t.split('-')[0]) for t in trajectory[1:]])
         traj_y.append([int(t.split('-')[1]) for t in trajectory[1:]])
-    print(traj_y)
+    
     
     for i in range(0, len(data)): # loop through every trajectory 
         plt.plot(traj_x[i], traj_y[i])
@@ -26,7 +26,7 @@ def main():
         plt.ylim(0, 14)
         # plt.scatter(traj_x[i][0], traj_y[i][0], color='red')
         # plt.scatter(traj_x[i][-1], traj_y[i][-1], color='green')
-        # plt.axis('off')
+        plt.axis('off')
         plt.title('Trajectory '+str(i))
         img_filename = os.path.join("trajectory_imgs", 'img'+str(i)+'.png')
         plt.savefig(img_filename) 
