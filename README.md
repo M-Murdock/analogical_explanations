@@ -1,24 +1,21 @@
-1) Sample a bunch of trajectories from the robot’s
-policy (we’ll assume that all trajectories are
-the same length). Create embeddings of each
-trajectory based on the sequences of state-
-action pairs and resulting reward. The reward
-represents one dimension of the embedding
-space.
-2) Select a set of trajectory embeddings to be the
-”common ground”. Show these behaviors to
-the human.
-3) Select a trajectory A which is outside of the
-common ground. We want to explain this to
-the user.
-4) Searching the set of trajectory embeddings in
-”common ground”, find the ones which are
-closest to A along the ”reward” axis (using
-euclidean distance) and store them as a set
-of ”candidate trajectories”. That is, find the
-trajectories which result in a similar reward.
-5) Search the ”candidate trajectories” to find one
-that is closest to trajectory A
-6) This is our analogous trajectory. Display it to
-the user.
-7) Add the trajectory to the common ground.
+<!-- ## Usage
+``vlm_similarities.py`` -->
+
+## Files
+``AE.py`` - Autoencoder for creating embedding space
+
+``Agents.py`` - Creates and generates trajectories for gridworld agents
+
+``generate_maps.py`` - Given a template for a gridworld map (.txt file), generates maps (also.txt) that place the agent in each possible start location
+
+``generate_traj_imgs.py`` - Uses state data to represent each trajectory on a 2D graph  
+
+``gridworld_embedding_space.py`` -  Creates an embedding space of agent trajectories  
+
+``gridworld.py`` - Tests the trajectory embedding space  
+
+``interactivePlotABCD.py`` - Represents trajectories and embeddings in an interactive GUI
+
+``llm_similarities.py`` - Using trajectories formatted as natural language prompts, uses LLM to try to identify analogous trajectories
+
+``vlm_similarities.py`` - Similar to ``llm_similarities.py``, but uses graphical representations of trajectories

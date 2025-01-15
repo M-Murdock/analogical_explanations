@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 # Reference: https://ai.google.dev/gemini-api/docs/quickstart?lang=python
 
+# Uses a naive approach to identifying analogous robot trajectories by using a VLM (Gemini)
+
 import google.generativeai as genai
 import os
 import PIL.Image
