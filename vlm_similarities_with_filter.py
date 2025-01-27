@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # Reference: https://ai.google.dev/gemini-api/docs/quickstart?lang=python
 
-# Similar to vlm_similarities, but filters for 
+# Similar to vlm_similarities, but filters to make process more efficient
 import google.generativeai as genai
 import os
 import PIL.Image
